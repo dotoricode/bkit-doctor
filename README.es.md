@@ -1,5 +1,7 @@
 # bkit-doctor
 
+> ⚠️ **En desarrollo** — Este proyecto está en desarrollo activo.
+
 > Una herramienta de línea de comandos para diagnosticar, inicializar y mantener entornos de proyectos al estilo bkit.
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)

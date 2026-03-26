@@ -1,5 +1,7 @@
 # bkit-doctor
 
+> ⚠️ **開発中** — このプロジェクトは現在活発に開発されています。
+
 > bkitスタイルのプロジェクト環境を診断・初期化・維持するCLIツール。
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
