@@ -1,140 +1,173 @@
-# Changelog — bkit-doctor
+# Changelog
+
+All notable changes to **bkit-doctor** are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+Versions follow a phase-based progression rather than strict SemVer.
+
+---
 
 ## [Unreleased]
 
-### Added
--
-
 ---
 
-## [v0.4.3] - 2026-03-27
+## [0.4.2] — selective-apply-and-remediation — 2026-03-27
+
+Expanded `init` from a full-scaffold tool into a targeted, selective apply system.
+Introduced a shared target registry that connects check diagnostics to init actions.
 
 ### Added
-- `src/init/targetRegistry.js`: target 상수 정의, validateTargets, suggestTarget (Dice coefficient)
+
+- `src/init/targetRegistry.js` — 13 named targets with descriptions, `validateTargets()`, and Dice coefficient–based `suggestTarget()` for typo hints
+- Unknown target detection with `did you mean: <closest>?` suggestions and full target listing
 
 ### Changed
-- `src/init/scaffoldManifest.js`: DIRECTORIES에 targets[] 추가, TARGET_ALIASES 도입, 명칭 통일 (`required-*` → `*-core`, docs 개별 target)
-- `src/shared/remediationMap.js`: initTarget 명칭 동기화 (CLAUDE.md → null)
-- `src/init/buildInitPlan.js`: targets 필터링 + alias 확장 + neededDirs 동적 계산
-- `src/cli/commands/init.js`: --target / --targets 처리, unknown target validation + hint, 요약 개선
-- `src/cli/index.js`: --target (collect 반복) / --targets (쉼표) 옵션 등록
+
+- `src/init/scaffoldManifest.js` — each directory entry now carries a `targets[]` array; file entries use unified target names (`*-core` pattern); `TARGET_ALIASES` introduced for aggregate targets like `docs-core`
+- `src/shared/remediationMap.js` — `initTarget` values synchronized with `targetRegistry` keys; `CLAUDE.md` entry set to `null` (not scaffolded)
+- `src/init/buildInitPlan.js` — supports `targets` filter option; expands aliases; computes only the directories needed by selected files
+- `src/cli/commands/init.js` — `collectTargets()` merges `--target` (repeatable) and `--targets` (comma-separated); validation and hint output added; summary shows selected targets
+- `src/cli/index.js` — `--target` registered with collector function; `--targets` registered as comma-separated string
 
 ---
 
-## [v0.4.2] - 2026-03-27
+## [0.4.1] — init-safety-preview-backup — 2026-03-27
+
+Introduced a plan/apply architecture that separates what will happen from what actually happens.
+Added `--dry-run`, `--overwrite`, and `--backup` safety controls.
 
 ### Added
-- `src/init/initPlanModel.js`: PlanItem 타입 정의 + makeItem 헬퍼
-- `src/init/buildInitPlan.js`: 계획 계산 분리 (FS 읽기 전용, overwrite 옵션)
-- `src/init/applyInitPlan.js`: 계획 실행 (dry-run / backup / overwrite 지원)
-- `src/backup/createBackupSession.js`: timestamp 기반 백업 세션 (.bkit-doctor/backups/<ts>/)
-- `src/backup/copyToBackup.js`: 단일 파일 복사 유틸 (디렉터리 구조 유지)
-- `src/backup/backupManifest.js`: backup manifest.json 기록
+
+- `src/init/initPlanModel.js` — `PlanItem` type definition (`mkdir`, `mkdir-skip`, `create`, `skip`, `overwrite`) and `makeItem` helper
+- `src/init/buildInitPlan.js` — computes an init plan by reading the filesystem without writing anything
+- `src/init/applyInitPlan.js` — executes a plan; respects `dryRun`, `backup`, and `overwrite` flags
+- `src/backup/createBackupSession.js` — creates a timestamped backup session directory under `.bkit-doctor/backups/`
+- `src/backup/copyToBackup.js` — copies a single file to the backup session, preserving directory structure
+- `src/backup/backupManifest.js` — writes `manifest.json` listing all backed-up files
 
 ### Changed
-- `src/cli/commands/init.js`: plan/apply 구조로 재작성, 출력 개선
-- `src/cli/index.js`: --dry-run / --overwrite / --backup / --backup-dir 옵션 등록
+
+- `src/cli/commands/init.js` — rewritten around `buildInitPlan` / `applyInitPlan`; output shows `[CREATE]`, `[SKIP]`, `[OVERWRITE]` labels
+- `src/cli/index.js` — added `--dry-run`, `--overwrite`, `--backup`, `--backup-dir` options
 
 ---
 
-## [v0.4.1] - 2026-03-27
+## [0.4.0] — init-mvp-scaffold — 2026-03-27
+
+Replaced the `init` command stub with a real implementation. Non-destructive scaffold generation based on a declarative manifest.
 
 ### Added
-- `src/init/scaffoldManifest.js`: 생성 대상 디렉터리 13개 + 파일 25개 manifest 정의 (initTarget 포함)
-- `src/init/fileTemplates.js`: 파일 타입별 최소 내용 생성 (9가지 타입)
-- `src/init/writeIfMissing.js`: ensureDir / writeIfMissing 유틸 (non-destructive)
-- `src/init/generateScaffold.js`: manifest 기반 스캐폴드 생성 루프
+
+- `src/init/scaffoldManifest.js` — defines 13 directories and 25 files as the standard bkit environment scaffold; each file carries an `initTarget` key for future check integration
+- `src/init/fileTemplates.js` — generates minimal but valid content for 9 file types (agent, skill, template, policy, doc, changelog, JSON configs)
+- `src/init/generateScaffold.js` — iterates the manifest and delegates to write utilities
+- `src/init/writeIfMissing.js` — `ensureDir` and `writeIfMissing` utilities: create if absent, skip if present, never overwrite
 
 ### Changed
-- `src/cli/commands/init.js`: stub → 실제 init MVP 동작 (CREATE/SKIP 결과 요약 출력)
+
+- `src/cli/commands/init.js` — stub replaced with live scaffold runner; outputs `[CREATE]` / `[SKIP]` per item with a summary
 
 ---
 
-## [v0.3.3] - 2026-03-27
+## [0.3.2] — check-output-and-init-mapping — 2026-03-27
+
+Standardized checker output and introduced the `remediationMap` that connects check results to future init actions.
 
 ### Added
-- `src/check/resultModel.js`: CheckResult 타입 + normalizeResult 헬퍼
-- `src/shared/remediationMap.js`: checker id → initTarget + fixHint 매핑 (9개)
-- `src/check/formatters/defaultFormatter.js`: 카테고리 요약 + 상세 + 총계 포맷터
+
+- `src/check/resultModel.js` — `CheckResult` type definition and `normalizeResult` helper for consistent result shapes
+- `src/shared/remediationMap.js` — maps each checker ID to an `initTarget` and a human-readable `fixHint`
+- `src/check/formatters/defaultFormatter.js` — formats results by category with per-category summary, detailed item list, and totals line
 
 ### Changed
-- `check.js`: console.log 직접 제거 → formatter.format() 위임
-- checker 7종: details 필드 제거, missing/found/expected 표준화
-- `CheckerRunner`: missing/found/expected pass-through
+
+- `src/cli/commands/check.js` — delegates all output to `formatter.format()` instead of direct `console.log`
+- All 7 checkers — `details` field removed; `missing`, `found`, and `expected` arrays standardized
+- `CheckerRunner` — passes `missing`, `found`, `expected` through to caller unchanged
 
 ---
 
-## [v0.3.2] - 2026-03-27
+## [0.3.1] — check-expansion-set — 2026-03-27
+
+Extended the checker set and standardized the checker invocation API.
 
 ### Added
-- `src/checkers/shared/fileRules.js`: findMissingFiles / hasAnyFile / hasAllFiles 공통 유틸
-- `src/checkers/policies.js`: policies.required checker (정책 파일 4종)
-- checker 결과에 `category` 필드 추가 (id prefix 자동 추출)
+
+- `src/checkers/shared/fileRules.js` — shared utilities: `findMissingFiles`, `hasAnyFile`, `hasAllFiles`
+- `src/checkers/policies.js` — `policies.required` checker validating 4 policy files
+- `category` field added to all checker results (automatically extracted from checker ID prefix)
 
 ### Changed
-- `skills.required`: 디렉터리 존재 → SKILL.md 파일 존재 기준 강화 (7종)
-- `templates.required`: 디렉터리 존재 → 4개 특정 템플릿 파일 검사
-- `changelog.exists`: 단일 경로 → 3개 후보 경로 다중 지원
+
+- `skills.required` — upgraded from directory presence check to SKILL.md file presence check (6 files)
+- `templates.required` — upgraded from directory presence check to 4 specific template file checks
+- `changelog.exists` — expanded from single path to 3 candidate paths with fallback logic
+- Checker API: `run(targetPath)` → `run(context)` where `context = { projectRoot, platform }`
+- `CheckerRunner.run()` — builds context object internally before dispatching to each checker
 
 ---
 
-## [v0.3.1] - 2026-03-27
+## [0.3.0] — check-core-bootstrap — 2026-03-26
 
-### Changed
-- checker API: `run(targetPath)` → `run(context)` (context = `{ projectRoot, platform }`)
-- `CheckerRunner.run()`: 내부에서 context 객체 빌드 후 각 checker에 전달
-
----
-
-## [v0.3.0] - 2026-03-26
+Implemented the full diagnostic check system with categorized checkers and structured output.
 
 ### Added
-- `src/checkers/`: 카테고리별 checker 파일 6종 (structure, config, docs, agents, skills, misc)
-- 13개 checker 구현 — pass/warn/fail 결과 출력
-- `src/checkers/index.js`: DEFAULT_CHECKERS 자동 등록
-- `src/cli/commands/check.js`: [PASS]/[WARN]/[FAIL] 포맷 + 종합 상태(HEALTHY/WARNING/FAILED)
-- `src/core/checker.js`: title·details 필드 추가
+
+- `src/checkers/` — 6 checker modules: `structure`, `config`, `docs`, `agents`, `skills`, `misc`
+- 13 checker rules implemented — each returns `pass`, `warn`, or `fail`
+- `src/checkers/index.js` — `DEFAULT_CHECKERS` auto-registration
+- `src/cli/commands/check.js` — `[PASS]` / `[WARN]` / `[FAIL]` output format with overall status line (`HEALTHY` / `WARNING` / `FAILED`)
+- `src/core/checker.js` — `title` and `details` fields added to checker result shape
 
 ### Removed
-- `doctor` 커맨드 제거 — `check` 기준으로 통일
+
+- `doctor` command removed — consolidated into `check` as the single diagnostic entry point
 
 ---
 
-## [v0.2.0] - 2026-03-26
+## [0.2.0] — cli-skeleton — 2026-03-26
+
+Introduced the `CheckerRunner` core and the `check` command as the primary CLI surface.
 
 ### Added
-- `src/core/checker.js`: CheckerRunner class (register/run API)
-- `src/checks/`: 진단 모듈 디렉터리 (Phase 3 진단 항목 위치)
-- `check` 커맨드: `doctor`와 동일 동작, 별도 진입점 제공
-- doctor 출력 포맷: `[✓]/[!]/[✗]` 결과 표시 + 통계 줄
+
+- `src/core/checker.js` — `CheckerRunner` class with `register()` and `run()` API
+- `src/checks/` — placeholder directory for diagnostic modules
+- `check` command — same behavior as `doctor`, provided as the canonical entry point
+- Output format: `[✓]` / `[!]` / `[✗]` per result with a statistics summary line
 
 ### Changed
-- `src/cli/commands/doctor.js`: stub → CheckerRunner 기반 진단 루프
+
+- `src/cli/commands/doctor.js` — stub replaced with `CheckerRunner`-based diagnostic loop
 
 ---
 
-## [v0.1.0] - 2026-03-26
+## [0.1.0] — cli-foundation — 2026-03-26
+
+Established the CLI foundation: entry point, command routing, and platform utilities.
 
 ### Added
-- CLI 진입점 `src/cli/index.js` (commander 기반)
-- `version` 명령: 버전 + 플랫폼 정보 출력
-- `doctor` 명령: stub (Phase 3 구현 예정)
-- `init` 명령: stub (Phase 2 구현 예정)
-- `src/utils/platform.js`: OS 감지, 크로스플랫폼 경로 유틸
-- Phase 1 PDCA 문서 4종 (plan/design/task/report)
+
+- `src/cli/index.js` — Commander-based CLI entry point
+- `version` command — prints version and platform information
+- `doctor` command — stub (planned for Phase 3)
+- `init` command — stub (planned for Phase 2)
+- `src/utils/platform.js` — OS detection and cross-platform path utilities
+- Phase 1 PDCA documents: plan, design, task, report
 
 ---
 
-## [v0.0.1] - 2026-03-26
+## [0.0.1] — env-setup — 2026-03-26
+
+Initial project creation. Established the bkit-style development environment that bkit-doctor itself is built to scaffold.
 
 ### Added
-- 프로젝트 초기 생성
-- `.claude/` bkit 운영 환경 세팅 완료
-  - agents: planner-orchestrator, implementer, phase-reviewer, report-summarizer
-  - skills: phase-bootstrap, plan, design, do, check, report, work-summary
-  - templates: prd, plan, design, task, report, changelog
-  - context: project-overview, architecture, conventions, constraints, phase-index
-  - policies: global, output, security, documentation
-  - state: active-phase, workstream-status, agent-status
-- `docs/` 디렉터리 구조 생성
-- `CLAUDE.md` 프로젝트 규칙 작성
+
+- `.claude/` directory with full bkit operating environment:
+  - `agents/` — planner-orchestrator, implementer, phase-reviewer, report-summarizer
+  - `skills/` — phase-bootstrap, plan, design, do, check, report, work-summary
+  - `templates/` — prd, plan, design, task, report, changelog
+  - `context/` — project-overview, architecture, conventions, constraints, phase-index
+  - `policies/` — global, output, security, documentation
+- `docs/` directory structure initialized
+- `CLAUDE.md` project rules authored
