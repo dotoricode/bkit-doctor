@@ -6,7 +6,7 @@
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org)
-[![Version](https://img.shields.io/badge/version-0.4.2-orange.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.5.6-orange.svg)](CHANGELOG.md)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/wpfhak/bkit-doctor/pulls)
 
 **English** | [한국어](README.ko.md) | [日本語](README.ja.md) | [中文](README.zh.md) | [Español](README.es.md)
@@ -28,9 +28,11 @@ Adopting a structured AI-native development workflow is powerful, but getting st
 **bkit-doctor** exists to lower that barrier:
 
 - **Diagnose** — instantly see what is present, what is missing, and what needs attention
+- **Recommend** — after diagnosing, automatically suggest which targets to initialize
 - **Init** — scaffold the correct structure in seconds, without overwriting anything you already have
 - **Target** — apply only what you need, one piece at a time
 - **Preview** — see exactly what will change before anything is written to disk
+- **Confirm** — review and approve the plan before applying it
 
 This tool was born from a simple idea: *the workflow should be easy to enter, not just easy to use once you're in it.*
 
@@ -41,12 +43,19 @@ This tool was born from a simple idea: *the workflow should be easy to enter, no
 | Feature | Description |
 |---------|-------------|
 | `check` | Diagnose project environment — pass / warn / fail per item |
+| Recommendations | After check, shows which `init` targets to run next |
+| Grouped targets | Multiple related targets consolidated (e.g. `docs-core`) |
+| Snapshot cache | `check` saves a recommendation snapshot; `init --recommended` reuses it |
 | `init` | Scaffold missing directories and files non-destructively |
+| `--recommended` | Auto-select init targets based on current project state |
 | `--dry-run` | Preview what will be created without touching the filesystem |
+| `--yes / -y` | Skip the confirmation prompt and apply immediately |
+| `--fresh` | Force recompute recommendations, ignore cached snapshot |
 | `--target` | Apply only specific targets (e.g. `hooks-json`, `skills-core`) |
 | `--targets` | Apply multiple targets in one command (comma-separated) |
 | `--overwrite` | Replace existing files when needed |
 | `--backup` | Back up existing files before overwriting |
+| Confirm prompt | Shows apply plan and asks `Continue? (y/N)` before writing |
 | Typo hints | `did you mean: docs-report?` when a target name is mistyped |
 | Cross-platform | Works on macOS and Windows |
 
@@ -67,7 +76,7 @@ This structure gives AI assistants — and human developers — a shared, stable
 bkit-doctor enforces this structure by:
 
 1. **Checking** whether the required files and directories exist
-2. **Reporting** what is missing or misconfigured, with actionable hints
+2. **Recommending** which `init` targets address the issues found
 3. **Scaffolding** the correct structure when it is absent
 4. **Connecting** the diagnostic output back to the init tool via a shared `initTarget` system
 
@@ -136,11 +145,17 @@ bkit-doctor <command> [options]
 # Check your project's bkit environment
 bkit-doctor check
 
-# Preview what init would create, without changing anything
-bkit-doctor init --dry-run
+# Apply recommended targets from check results (uses snapshot if available)
+bkit-doctor init --recommended
 
-# Initialize the full structure
+# Preview what init --recommended would do
+bkit-doctor init --recommended --dry-run
+
+# Initialize the full structure (with confirmation prompt)
 bkit-doctor init
+
+# Skip confirmation and apply immediately
+bkit-doctor init --yes
 
 # Initialize only specific pieces
 bkit-doctor init --target hooks-json --target skills-core
@@ -153,8 +168,10 @@ bkit-doctor init --target hooks-json --target skills-core
 ### `check`
 
 Diagnose the bkit environment in the current (or specified) directory.
+After the diagnosis, `check` saves a recommendation snapshot so that
+`init --recommended` can reuse the results without re-running all checks.
 
-```bash
+```
 bkit-doctor check [options]
 
 Options:
@@ -166,21 +183,35 @@ Options:
 ```
 [bkit-doctor] 진단 대상: /path/to/project
 
-[structure]
-  [✓] .claude/ exists
+──── 카테고리 ──────────────────────────
+  ✗ structure   1 fail
+  ! config      2 warn
+  ! docs        4 warn
+  ...
 
-[config]
-  [✗] .claude/hooks.json missing
-      fix: run init --target hooks-json
+──── 상세 ──────────────────────────────
+[FAIL] structure.claude-root — .claude/ missing
+  → run: bkit-doctor init --target claude-root
+...
 
-[agents]
-  [✗] required agents not found
-      fix: run init --target agents-core
+총 14개 — PASS 0 / WARN 12 / FAIL 2   상태: FAILED
 
-총 12개 — pass: 8, warn: 1, fail: 3
+──── 추천 ──────────────────────────────
+  8개 추천 target (14개 문제 기반)
+
+  • claude-root — create the .claude/ root directory
+  • hooks-json  — create the default hooks.json file
+  • docs-core   — create all docs/ scaffolds (plan, design, task, report, changelog)
+    (covers: docs-plan, docs-design, docs-task, docs-report, docs-changelog)
+
+  Recommended next step:
+  bkit-doctor init --targets claude-root,hooks-json,...,docs-core
+
+  Preview first:
+  bkit-doctor init --targets claude-root,hooks-json,...,docs-core --dry-run
 ```
 
-Each item is rated `pass`, `warn`, or `fail`. Warn and fail items include a `fixHint` pointing to the relevant `init` target.
+Each item is rated `pass`, `warn`, or `fail`. The recommendation section shows which `init` targets address the issues, with related targets grouped (e.g. all `docs-*` → `docs-core`).
 
 ---
 
@@ -188,12 +219,18 @@ Each item is rated `pass`, `warn`, or `fail`. Warn and fail items include a `fix
 
 Scaffold missing files and directories. Non-destructive by default — existing files are never overwritten unless you explicitly request it.
 
-```bash
+Before applying, `init` shows a plan summary and asks `Continue? (y/N)`.
+Use `--dry-run` to preview without writing, or `--yes` to skip confirmation.
+
+```
 bkit-doctor init [options]
 
 Options:
   -p, --path <dir>       Target directory (default: current directory)
   --dry-run              Show plan without writing anything
+  --recommended          Auto-select targets from current project state
+  --fresh                Force recompute recommendations (ignore snapshot)
+  -y, --yes              Skip confirmation prompt, apply immediately
   --target <name>        Apply a specific target only (repeatable)
   --targets <list>       Apply multiple targets, comma-separated
   --overwrite            Allow overwriting existing files
@@ -233,6 +270,22 @@ bkit-doctor version
 
 ## Examples
 
+### Check and apply recommendations
+
+```bash
+# 1. Diagnose — saves a recommendation snapshot
+bkit-doctor check
+
+# 2. Apply recommended targets using cached snapshot
+bkit-doctor init --recommended
+
+# Or preview first
+bkit-doctor init --recommended --dry-run
+
+# Force fresh computation (ignore cached snapshot)
+bkit-doctor init --recommended --fresh
+```
+
 ### Preview initialization (nothing written)
 
 ```bash
@@ -247,8 +300,49 @@ bkit-doctor init --dry-run
 #   [CREATE]   .claude/agents/planner-orchestrator.md
 #   ...
 #
+# 요약
+#   directories created : 13
+#   files created       : 25
+#   files skipped       : 0
+#
 # init completed (dry-run)
 # no files changed
+```
+
+### Confirm before applying
+
+```bash
+bkit-doctor init --targets hooks-json,docs-core
+
+# [bkit-doctor] init: /path/to/project
+# [targets] hooks-json, docs-core
+#
+#   [MKDIR]    .claude
+#   [CREATE]   .claude/hooks.json
+#   ...
+#
+# Apply?
+#   targets      : hooks-json, docs-core
+#   mkdir        : 1
+#   create       : 6
+#   skip         : 0
+#
+# Continue? (y/N) y
+#
+# 요약
+#   selected targets     : hooks-json, docs-core
+#   directories created  : 1
+#   files created        : 6
+#   files skipped        : 0
+#
+# init completed
+```
+
+### Skip confirmation (CI / automation)
+
+```bash
+bkit-doctor init --yes
+bkit-doctor init --recommended --yes
 ```
 
 ### Initialize only what you need
@@ -289,27 +383,45 @@ bkit-doctor init --target docs-reprot
 bkit-doctor/
 ├── src/
 │   ├── cli/
-│   │   ├── index.js              # CLI entry point (commander)
+│   │   ├── index.js                     # CLI entry point (commander)
 │   │   └── commands/
-│   │       ├── check.js          # check command
-│   │       ├── init.js           # init command
-│   │       └── version.js        # version command
+│   │       ├── check.js                 # check command + snapshot save
+│   │       ├── init.js                  # init command (confirm / recommended / snapshot)
+│   │       └── version.js
 │   ├── core/
-│   │   └── checker.js            # CheckerRunner
-│   ├── checkers/                 # diagnostic checkers (structure, config, agents...)
+│   │   └── checker.js                   # CheckerRunner
+│   ├── checkers/                        # diagnostic modules (structure, config, agents...)
 │   │   └── shared/fileRules.js
 │   ├── check/
-│   │   ├── resultModel.js        # CheckResult type
-│   │   └── formatters/
+│   │   ├── resultModel.js               # CheckResult type
+│   │   ├── formatters/
+│   │   │   └── defaultFormatter.js      # terminal output + grouped recommendation render
+│   │   └── recommendations/
+│   │       ├── recommendationModel.js   # Recommendation type
+│   │       ├── buildRecommendations.js  # warn/fail → dedupe + priority sort
+│   │       ├── groupingRegistry.js      # parent/child grouping policy
+│   │       ├── groupRecommendations.js  # raw → grouped recommendations
+│   │       ├── buildSuggestedFlow.js    # Recommendation[] → SuggestedFlow
+│   │       ├── suggestedFlowModel.js    # SuggestedFlow type
+│   │       ├── computeRecommendations.js# async: run checks → grouped recommendations
+│   │       ├── recommendationSnapshotModel.js
+│   │       ├── buildRecommendationFingerprint.js
+│   │       ├── saveRecommendationSnapshot.js
+│   │       ├── loadRecommendationSnapshot.js
+│   │       └── validateRecommendationSnapshot.js
 │   ├── init/
-│   │   ├── scaffoldManifest.js   # what to create
-│   │   ├── fileTemplates.js      # minimal file content
-│   │   ├── targetRegistry.js     # target names + validation + typo hints
-│   │   ├── buildInitPlan.js      # plan computation (read-only)
-│   │   └── applyInitPlan.js      # plan execution (write / backup / dry-run)
-│   ├── backup/                   # backup session management
+│   │   ├── scaffoldManifest.js          # what to create (dirs + files + aliases)
+│   │   ├── fileTemplates.js             # minimal file content
+│   │   ├── targetRegistry.js            # target names + validation + typo hints
+│   │   ├── buildInitPlan.js             # plan computation (read-only FS scan)
+│   │   ├── applyInitPlan.js             # plan execution (write / backup / dry-run)
+│   │   └── confirmApply.js              # readline confirm prompt
+│   ├── backup/                          # backup session management
 │   └── shared/
-│       └── remediationMap.js     # checker id → initTarget mapping
+│       └── remediationMap.js            # checker id → initTarget mapping
+├── .bkit-doctor/
+│   └── cache/
+│       └── recommendation-snapshot.json # saved after each check
 └── docs/
     ├── 01-plan/
     ├── 02-design/
