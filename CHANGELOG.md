@@ -11,6 +11,33 @@ Versions follow a phase-based progression rather than strict SemVer.
 
 ---
 
+## [0.5.4] — confirm-before-apply — 2026-03-27
+
+Added a user confirmation step before any real file changes.
+`init` now shows a plan summary and waits for `y/N` before applying.
+
+### Added
+
+- `src/init/confirmApply.js` — readline-based "Continue? (y/N)" prompt with non-TTY guard (requires `--yes` in CI/piped contexts) and SIGINT handling
+- `-y, --yes` option on `init` command — skips confirmation and applies immediately
+
+### Changed
+
+- `src/cli/commands/init.js` — restructured execution flow: plan → render detail → dry-run exit → no-op exit → `--yes` → confirm → apply; extracted `printSummary()` helper reused in both dry-run and post-apply paths; plan stats computed from plan items before `applyInitPlan` so dry-run summaries are accurate
+- `src/cli/index.js` — registered `-y, --yes` option
+
+### Behavior
+
+| Mode | Confirm |
+|------|---------|
+| `--dry-run` | no — preview only |
+| nothing to apply | no — exits cleanly |
+| `--yes` / `-y` | no — applies immediately |
+| TTY interactive | yes — "Continue? (y/N)" |
+| non-TTY stdin | no — warns "use --yes", cancelled |
+
+---
+
 ## [0.5.3] — init-recommended-mvp — 2026-03-27
 
 Introduced `init --recommended`: check results now drive the init flow automatically.
