@@ -35,6 +35,7 @@ program
   .option('--backup-dir <dir>',      '백업 저장 디렉터리 (기본: .bkit-doctor/backups)')
   .option('--target <name>',         '특정 target만 생성 (반복 사용 가능)', collect, [])
   .option('--targets <list>',        '쉼표 구분 target 목록 (예: hooks-json,skills-core)')
+  .option('--recommended',           '현재 프로젝트 상태 기반 추천 target 자동 적용')
   .action(initCommand);
 
 function collect(val, prev) { return prev.concat([val]); }
