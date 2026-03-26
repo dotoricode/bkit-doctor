@@ -1,0 +1,23 @@
+{
+  "name": "bkit-doctor",
+  "version": "0.1.0",
+  "description": "bkit 운영 환경 진단 CLI",
+  "type": "commonjs",
+  "main": "src/cli/index.js",
+  "bin": {
+    "bkit-doctor": "src/cli/index.js"
+  },
+  "scripts": {
+    "start": "node src/cli/index.js",
+    "doctor": "node src/cli/index.js doctor",
+    "version:check": "node src/cli/index.js --version"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "commander": "^12.0.0"
+  },
+  "keywords": ["bkit", "claude-code", "cli", "doctor"],
+  "license": "MIT"
+}

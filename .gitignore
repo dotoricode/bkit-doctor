@@ -66,6 +66,9 @@ $RECYCLE.BIN/
 # Claude / bkit
 # ========================
 
+# bkit runtime state (audit 로그, session history, memory)
+.bkit/
+
 # state는 버전관리 제외 (작업 상태 파일)
 .claude/state/
 

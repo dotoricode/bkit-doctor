@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/post-tool-use-write.js",
+            "description": "src/ 파일 변경 시 Design 문서 연결 여부 advisory warning"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/pre-tool-use-bash.js",
+            "description": "위험 명령 감지 시 advisory warning (차단 없음)"
+          }
+        ]
+      }
+    ]
+  }
+}
