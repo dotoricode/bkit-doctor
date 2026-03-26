@@ -1,8 +1,9 @@
 'use strict';
 
-const { CheckerRunner }    = require('../../core/checker');
-const { DEFAULT_CHECKERS } = require('../../checkers/index');
+const { CheckerRunner }      = require('../../core/checker');
+const { DEFAULT_CHECKERS }   = require('../../checkers/index');
 const { buildRecommendations } = require('./buildRecommendations');
+const { groupRecommendations } = require('./groupRecommendations');
 
 /**
  * computeRecommendations.js
@@ -31,9 +32,10 @@ async function computeRecommendations(projectRoot) {
   const fail = results.filter(r => r.status === 'fail').length;
 
   const { recommendations, unmappedCount, invalidCount } = buildRecommendations(results);
+  const { finalRecommendations }                         = groupRecommendations(recommendations);
 
   return {
-    recommendations,
+    recommendations: finalRecommendations,
     unmappedCount,
     invalidCount,
     issueCount: warn + fail,

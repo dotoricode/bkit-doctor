@@ -1,8 +1,9 @@
 'use strict';
 
-const { REMEDIATION_MAP }      = require('../../shared/remediationMap');
-const { buildRecommendations } = require('../recommendations/buildRecommendations');
-const { buildSuggestedFlow }   = require('../recommendations/buildSuggestedFlow');
+const { REMEDIATION_MAP }        = require('../../shared/remediationMap');
+const { buildRecommendations }   = require('../recommendations/buildRecommendations');
+const { groupRecommendations }   = require('../recommendations/groupRecommendations');
+const { buildSuggestedFlow }     = require('../recommendations/buildSuggestedFlow');
 
 const STATUS_LABEL = { pass: '[PASS]', warn: '[WARN]', fail: '[FAIL]' };
 const CAT_ICON     = { ok: '✓', warn: '!', fail: '✗' };
@@ -103,7 +104,8 @@ function format(targetPath, rawResults) {
 
   // ── 추천 ──
   const { recommendations, unmappedCount, invalidCount } = buildRecommendations(results);
-  const flow = buildSuggestedFlow(recommendations, warn + fail);
+  const { finalRecommendations, groupedFrom }            = groupRecommendations(recommendations);
+  const flow = buildSuggestedFlow(finalRecommendations, warn + fail);
 
   if (!flow) {
     if (warn > 0 || fail > 0) {
@@ -120,12 +122,17 @@ function format(targetPath, rawResults) {
 
   console.log('');
   console.log('──── 추천 ' + '─'.repeat(30));
-  console.log(`  ${recommendations.length}개 추천 target (${warn + fail}개 문제 기반)`);
+  console.log(`  ${finalRecommendations.length}개 추천 target (${warn + fail}개 문제 기반)`);
   console.log('');
 
-  for (const rec of recommendations) {
+  for (const rec of finalRecommendations) {
     const desc = rec.description ? ` — ${rec.description}` : '';
     console.log(`  • ${rec.target}${desc}`);
+    // grouped target이면 묶은 원본 child 목록 표시
+    if (groupedFrom.has(rec.target)) {
+      const children = groupedFrom.get(rec.target);
+      console.log(`    (covers: ${children.join(', ')})`);
+    }
   }
 
   if (invalidCount > 0) {
