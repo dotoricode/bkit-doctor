@@ -277,15 +277,14 @@ function main() {
   }
 
   // ── Summary ───────────────────────────────────────────────────────────────
-  const hardResults = results.filter(r => !r.soft);
-  const hardPassed  = hardResults.filter(r => r.passed).length;
-  const hardFailed  = hardResults.filter(r => !r.passed).length;
-  const softFailed  = results.filter(r => r.soft && !r.passed).length;
+  const totalPassed = results.filter(r => r.passed).length;
+  const hardFailed  = results.filter(r => !r.soft && !r.passed).length;
+  const softFailed  = results.filter(r => r.soft  && !r.passed).length;
 
   console.log('\n' + '─'.repeat(WIDTH));
   console.log(
     `  total : ${results.length}   ` +
-    `passed : ${hardPassed}   ` +
+    `passed : ${totalPassed}   ` +
     `failed : ${hardFailed}` +
     (softFailed > 0 ? `   soft-failed : ${softFailed}` : ''),
   );
