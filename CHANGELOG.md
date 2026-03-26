@@ -11,6 +11,29 @@ Versions follow a phase-based progression rather than strict SemVer.
 
 ---
 
+## [0.5.5] — grouped-recommendation-and-parent-targets — 2026-03-27
+
+Introduced grouped recommendation: multiple `docs-*` child targets are now consolidated
+into `docs-core` when 2 or more are recommended, reducing output length and
+improving the suggested `init` command readability.
+
+### Added
+
+- `src/check/recommendations/groupingRegistry.js` — defines `GROUPS` (parent, children, minChildren, label, description); initial entry: `docs-core` with `minChildren: 2`
+- `src/check/recommendations/groupRecommendations.js` — pure function `groupRecommendations(recommendations)` that consolidates child targets into parent targets; validates parent against `VALID_TARGETS`; re-sorts by `TARGET_PRIORITY`; returns `{ finalRecommendations, groupedFrom }`
+
+### Changed
+
+- `src/check/formatters/defaultFormatter.js` — applies `groupRecommendations` before rendering; grouped targets show a `(covers: ...)` hint line; count and suggested flow use `finalRecommendations`
+- `src/check/recommendations/computeRecommendations.js` — applies `groupRecommendations`; returns grouped recommendations so `init --recommended` receives `docs-core` instead of 5 individual docs targets
+
+### Effect
+
+- Empty project recommendation count: 12 → 8 targets
+- `docs-core` expands correctly in `buildInitPlan` via existing `TARGET_ALIASES`
+
+---
+
 ## [0.5.4] — confirm-before-apply — 2026-03-27
 
 Added a user confirmation step before any real file changes.
