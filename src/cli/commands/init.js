@@ -5,14 +5,19 @@ const { buildInitPlan }              = require('../../init/buildInitPlan');
 const { applyInitPlan }              = require('../../init/applyInitPlan');
 const { validateTargets, suggestTarget, TARGETS } = require('../../init/targetRegistry');
 const { computeRecommendations }     = require('../../check/recommendations/computeRecommendations');
+const { confirmApply }               = require('../../init/confirmApply');
 
 /**
- * init 명령 핸들러 — Phase 5-3: --recommended MVP
+ * init 명령 핸들러 — Phase 5-4: confirm-before-apply
+ *
+ * 실행 순서:
+ *   build plan → render detail → dry-run? → no-op? → --yes? → confirm → apply
  *
  * 우선순위:
- *   1. --target / --targets (explicit) — 항상 우선
- *   2. --recommended — explicit 없을 때만 추천 target 계산
- *   3. 둘 다 없으면 전체 scaffold
+ *   dry-run    → confirm 없이 preview만 출력
+ *   --yes / -y → confirm 없이 apply
+ *   no-op      → confirm 없이 종료
+ *   그 외       → confirm prompt
  */
 async function initCommand(options) {
   const projectRoot    = path.resolve(options.path || process.cwd());
@@ -21,19 +26,17 @@ async function initCommand(options) {
   const backup         = Boolean(options.backup);
   const backupDir      = options.backupDir || undefined;
   const useRecommended = Boolean(options.recommended);
+  const autoYes        = Boolean(options.yes);
 
-  // target 수집: --target 반복 + --targets 쉼표 구분
-  let rawTargets = collectTargets(options);
+  // ── target 수집 ──────────────────────────────────────────
+  let rawTargets      = collectTargets(options);
   let fromRecommended = false;
 
-  // --recommended 처리
   if (useRecommended) {
     if (rawTargets.length > 0) {
-      // explicit targets가 있으면 recommended 무시 — 명확히 알림
       console.log('[recommended] explicit targets provided — --recommended ignored');
       console.log(`[targets] ${rawTargets.join(', ')}`);
     } else {
-      // checks를 실행하여 추천 target 계산
       console.log(`[bkit-doctor] init: ${projectRoot}`);
       console.log('[recommended] running checks to calculate targets...');
 
@@ -46,21 +49,19 @@ async function initCommand(options) {
           console.log('no recommended targets — project looks healthy');
         } else {
           console.log('nothing to apply from recommendations');
-          if (invalidCount > 0) {
+          if (invalidCount > 0)
             console.log(`(${invalidCount} target(s) were invalid and excluded)`);
-          }
         }
         return;
       }
 
       rawTargets = recommendations.map(r => r.target);
       fromRecommended = true;
-
       console.log(`[recommended] ${rawTargets.length} targets: ${rawTargets.join(', ')}`);
     }
   }
 
-  // explicit target validation (--recommended 없거나 explicit이 있는 경우)
+  // explicit target validation
   if (rawTargets.length > 0 && !fromRecommended) {
     const { valid, unknown } = validateTargets(rawTargets);
     if (unknown.length > 0) {
@@ -72,9 +73,8 @@ async function initCommand(options) {
       }
       console.error('');
       console.error('available targets:');
-      for (const [k, v] of Object.entries(TARGETS)) {
+      for (const [k, v] of Object.entries(TARGETS))
         console.error(`  ${k.padEnd(20)} ${v}`);
-      }
       if (valid.length === 0) {
         process.exitCode = 1;
         return;
@@ -86,77 +86,117 @@ async function initCommand(options) {
     rawTargets = valid;
   }
 
-  // --recommended 없이 실행하는 일반 경로의 헤더 출력
+  // ── 헤더 출력 ────────────────────────────────────────────
   if (!useRecommended) {
     console.log(`[bkit-doctor] init: ${projectRoot}`);
     if (dryRun) console.log('[dry-run] no files will be changed');
     if (rawTargets.length > 0) console.log(`[targets] ${rawTargets.join(', ')}`);
-    console.log('');
   } else {
     if (dryRun) console.log('[dry-run] no files will be changed');
-    console.log('');
   }
+  console.log('');
 
-  // 1. 계획 계산
+  // ── 1. 계획 계산 ─────────────────────────────────────────
   const plan = buildInitPlan(projectRoot, { overwrite, targets: rawTargets });
 
-  // 2. 계획 출력 (상세)
-  for (const item of plan) {
-    const label = formatLabel(item);
-    console.log(`  ${label} ${item.path}`);
+  // ── 2. 상세 출력 ─────────────────────────────────────────
+  for (const item of plan)
+    console.log(`  ${formatLabel(item)} ${item.path}`);
+
+  // plan 통계 (apply 이전 계산)
+  const planMkdir     = plan.filter(i => i.action === 'mkdir').length;
+  const planCreate    = plan.filter(i => i.action === 'create').length;
+  const planOverwrite = plan.filter(i => i.action === 'overwrite').length;
+  const planSkip      = plan.filter(i => i.kind === 'file' && i.action === 'skip').length;
+  const noOp          = planMkdir === 0 && planCreate === 0 && planOverwrite === 0;
+
+  const suffix = fromRecommended ? ' from recommendations' : '';
+
+  // ── 3. dry-run 종료 ──────────────────────────────────────
+  if (dryRun) {
+    console.log('');
+    printSummary(rawTargets, fromRecommended, planMkdir, planCreate, planOverwrite, planSkip, null);
+    console.log('');
+    console.log(`init completed${suffix} (dry-run)`);
+    console.log('no files changed');
+    return;
   }
 
-  // 3. 실행
-  const { applied, skipped, backupSession } =
-    applyInitPlan(projectRoot, plan, { dryRun, backup, backupDir });
+  // ── 4. no-op 종료 ────────────────────────────────────────
+  if (noOp) {
+    console.log('');
+    if (rawTargets.length > 0)
+      console.log('all selected targets are already satisfied');
+    else
+      console.log('nothing to apply — project is already up to date');
+    return;
+  }
 
-  // 4. 요약
+  // ── 5. confirm (--yes 없는 경우) ─────────────────────────
+  if (!autoYes) {
+    const confirmed = await confirmApply({
+      targets: rawTargets,
+      fromRecommended,
+      mkdirCount:    planMkdir,
+      createCount:   planCreate,
+      overwriteCount: planOverwrite,
+      skipCount:     planSkip,
+    });
+    if (!confirmed) {
+      console.log('');
+      console.log('cancelled');
+      return;
+    }
+  }
+
+  // ── 6. apply ─────────────────────────────────────────────
+  const { applied, skipped, backupSession } =
+    applyInitPlan(projectRoot, plan, { backup, backupDir });
+
+  // ── 7. 요약 출력 ─────────────────────────────────────────
   const mkdirCount     = applied.filter(i => i.kind === 'dir').length;
   const createCount    = applied.filter(i => i.kind === 'file' && i.action === 'create').length;
   const overwriteCount = applied.filter(i => i.action === 'overwrite').length;
   const skipCount      = skipped.filter(i => i.kind === 'file').length;
 
   console.log('');
-  console.log('요약');
-  if (rawTargets.length > 0) {
-    const targetLabel = fromRecommended ? 'recommended targets' : 'selected targets';
-    console.log(`  ${targetLabel.padEnd(20)}: ${rawTargets.join(', ')}`);
-  }
-  console.log(`  ${'directories created'.padEnd(20)}: ${mkdirCount}`);
-  console.log(`  ${'files created'.padEnd(20)}: ${createCount}`);
-  if (overwriteCount > 0)
-    console.log(`  ${'files overwritten'.padEnd(20)}: ${overwriteCount}`);
-  console.log(`  ${'files skipped'.padEnd(20)}: ${skipCount}`);
-  if (backupSession)
-    console.log(`  ${'backup'.padEnd(20)}: ${backupSession}`);
-  console.log('');
+  printSummary(rawTargets, fromRecommended, mkdirCount, createCount, overwriteCount, skipCount, backupSession);
 
-  // 5. 최종 상태
-  const suffix = fromRecommended ? ' from recommendations' : '';
-  if (dryRun) {
-    console.log(`init completed${suffix} (dry-run)`);
-    console.log('no files changed');
-  } else if (skipCount > 0 && createCount === 0 && mkdirCount === 0) {
+  // ── 8. 최종 상태 ─────────────────────────────────────────
+  console.log('');
+  if (skipCount > 0 && createCount === 0 && mkdirCount === 0)
     console.log(`init completed${suffix} — nothing to do`);
-  } else if (skipCount > 0) {
+  else if (skipCount > 0)
     console.log(`init completed${suffix} with skipped files`);
-  } else {
+  else
     console.log(`init completed${suffix}`);
-  }
 }
 
-/**
- * --target (반복) + --targets (쉼표) 옵션을 합쳐 배열로 반환
- */
+// ── helpers ──────────────────────────────────────────────────────────────────
+
+function printSummary(targets, fromRecommended, mkdir, create, overwrite, skip, backupSession) {
+  console.log('요약');
+  if (targets.length > 0) {
+    const label = fromRecommended ? 'recommended targets' : 'selected targets';
+    console.log(`  ${label.padEnd(20)}: ${targets.join(', ')}`);
+  }
+  console.log(`  ${'directories created'.padEnd(20)}: ${mkdir}`);
+  console.log(`  ${'files created'.padEnd(20)}: ${create}`);
+  if (overwrite > 0)
+    console.log(`  ${'files overwritten'.padEnd(20)}: ${overwrite}`);
+  console.log(`  ${'files skipped'.padEnd(20)}: ${skip}`);
+  if (backupSession)
+    console.log(`  ${'backup'.padEnd(20)}: ${backupSession}`);
+}
+
 function collectTargets(options) {
   const result = [];
   if (options.target) {
     if (Array.isArray(options.target)) result.push(...options.target);
     else result.push(options.target);
   }
-  if (options.targets) {
+  if (options.targets)
     result.push(...options.targets.split(',').map(t => t.trim()).filter(Boolean));
-  }
   return result;
 }
 
