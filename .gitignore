@@ -1,0 +1,109 @@
+# ========================
+# OS
+# ========================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+Desktop.ini
+
+# ========================
+# Logs
+# ========================
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ========================
+# Node / JS / CLI
+# ========================
+node_modules/
+dist/
+build/
+out/
+coverage/
+.cache/
+.tmp/
+.temp/
+
+*.tsbuildinfo
+
+# ========================
+# Env / Secrets
+# ========================
+.env
+.env.*
+!.env.example
+
+*.pem
+*.key
+*.crt
+*.pfx
+
+# ========================
+# Editor / IDE
+# ========================
+.vscode/
+.idea/
+*.iml
+
+# ========================
+# macOS
+# ========================
+.AppleDouble
+.LSOverride
+
+# ========================
+# Windows
+# ========================
+$RECYCLE.BIN/
+*.lnk
+
+# ========================
+# Claude / bkit
+# ========================
+
+# state는 버전관리 제외 (작업 상태 파일)
+.claude/state/
+
+# local settings 제외
+.claude/settings.local.json
+
+# runtime cache
+.claude/.cache/
+.claude/.tmp/
+
+# ========================
+# Build / Package
+# ========================
+*.tgz
+*.zip
+*.tar
+*.tar.gz
+
+# ========================
+# npm / pnpm / yarn
+# ========================
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# (원하면 lock 포함 가능)
+
+# ========================
+# Test / coverage
+# ========================
+coverage/
+.nyc_output/
+
+# ========================
+# Misc
+# ========================
+*.swp
+*.swo
+*.bak
+*.tmp
+
