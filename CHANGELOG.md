@@ -11,6 +11,41 @@ Versions follow a phase-based progression rather than strict SemVer.
 
 ---
 
+## [0.5.6] — recommendation-snapshot-and-cached-flow — 2026-03-27
+
+`bkit-doctor check` now saves a recommendation snapshot to
+`.bkit-doctor/cache/recommendation-snapshot.json`.
+`init --recommended` reuses the snapshot when the project state matches,
+skipping a redundant check run.
+
+### Added
+
+- `src/check/recommendations/recommendationSnapshotModel.js` — `RecommendationSnapshot` type, `SNAPSHOT_VERSION`, `SNAPSHOT_REL_PATH`, `makeSnapshot()`
+- `src/check/recommendations/buildRecommendationFingerprint.js` — deterministic fingerprint from file existence map (scaffoldManifest paths + extras)
+- `src/check/recommendations/saveRecommendationSnapshot.js` — computes and writes snapshot after check; silent on failure
+- `src/check/recommendations/loadRecommendationSnapshot.js` — reads snapshot JSON; returns `null` on missing/corrupt
+- `src/check/recommendations/validateRecommendationSnapshot.js` — validates version, projectRoot (slash-normalized for Windows), and fingerprint
+- `--fresh` option on `init` — ignores snapshot and forces recomputation
+
+### Changed
+
+- `src/cli/commands/check.js` — calls `saveRecommendationSnapshot()` after `format()`
+- `src/cli/commands/init.js` — `--recommended` branch tries snapshot first; falls back to `computeRecommendations()` when missing/invalid; handles `--fresh`
+- `src/cli/index.js` — registered `--fresh` option on `init`
+
+### Snapshot Validation
+
+| Condition | Behavior |
+|-----------|----------|
+| Missing | fresh computation |
+| Corrupt JSON | fresh computation |
+| Version mismatch | fresh computation |
+| projectRoot mismatch | fresh computation |
+| Fingerprint mismatch | fresh computation + notice |
+| All valid | "using recent recommendation snapshot" |
+
+---
+
 ## [0.5.5] — grouped-recommendation-and-parent-targets — 2026-03-27
 
 Introduced grouped recommendation: multiple `docs-*` child targets are now consolidated
