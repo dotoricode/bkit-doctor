@@ -282,3 +282,7 @@ Apache License 2.0 — see [LICENSE](LICENSE) for full terms.
 
 - **[bkit](https://github.com/anthropics/bkit)** — for the workflow philosophy that inspired this project
 - The open-source community — for the tools and patterns this project builds on
+
+---
+
+> **Disclaimer**: This is an independent community tool, not an official POPUP STUDIO product. "bkit" is a trademark of POPUP STUDIO PTE. LTD.
