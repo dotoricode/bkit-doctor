@@ -11,6 +11,41 @@ Versions follow a phase-based progression rather than strict SemVer.
 
 ---
 
+## [1.0.0] — v1.0.0 release — 2026-03-30
+
+First stable release. All core CLI commands complete, tested, and documented.
+
+### Added
+
+- **Exit code support** — `check` returns exit 1 when hard checks (`.claude/`, `CLAUDE.md`) fail; CI-friendly
+- **Preset-aware content generation** — scaffold content varies by preset (`default` produces detailed agent/skill descriptions, `lean` produces compact placeholders)
+- **npm publish metadata** — `files`, `repository`, `homepage`, `bugs` fields in package.json
+- **`package-lock.json`** tracked for reproducible installs
+- **Test suite expansion** — 167 tests total (+34 new)
+  - `check.test.js` (15): CheckerRunner unit tests, exit code verification, hard/soft severity
+  - `init.test.js` (12): dry-run, file creation, overwrite safety, preset, typo hints
+  - `fix-cli.test.js` (7): auto-remediation, fix→check integration, FAIL count reduction
+
+### Changed
+
+- **README rewritten** for universal audience (not just bkit users)
+  - "ESLint for your Claude Code project layout" positioning
+  - "Who is this for?" / "What problem does it solve?" sections
+  - All 7 commands documented with examples
+  - CI usage section with GitHub Actions example
+  - npm dynamic badges
+- **Localized READMEs** (ko, ja, zh, es) synced with English structure
+- **`save.test.js`** — fixed 2 failing assertions (Windows path normalization, v0.7.0 message format)
+- **`package.json` description** — English, universal value proposition
+- **`severity` field** now passed through `CheckerRunner` results
+
+### Removed
+
+- **`src/checks/`** empty placeholder directory (consolidated into `src/checkers/`)
+- **"Work in progress"** notice from README
+
+---
+
 ## [0.7.0] — cli-refactor-load — 2026-03-27
 
 Phase 07-3: CLI를 init/fix/save/load 4개 명령 중심으로 정리하고 `load` 커맨드 구현.
