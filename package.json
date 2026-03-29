@@ -1,7 +1,7 @@
 {
   "name": "bkit-doctor",
   "version": "0.7.0",
-  "description": "bkit 운영 환경 진단 CLI",
+  "description": "Diagnose, scaffold, and maintain Claude Code project structure",
   "type": "commonjs",
   "main": "src/cli/index.js",
   "bin": {
@@ -18,7 +18,10 @@
     "test:preset-command": "node --test tests/preset-command.test.js",
     "test:preset-recommend": "node --test tests/preset-recommend.test.js",
     "test:save": "node --test tests/save.test.js",
-    "test:load": "node --test tests/load.test.js"
+    "test:load": "node --test tests/load.test.js",
+    "test:check": "node --test tests/check.test.js",
+    "test:init": "node --test tests/init.test.js",
+    "test:fix-cli": "node --test tests/fix-cli.test.js"
   },
   "engines": {
     "node": ">=18.0.0"
