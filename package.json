@@ -7,6 +7,12 @@
   "bin": {
     "bkit-doctor": "src/cli/index.js"
   },
+  "files": [
+    "src/",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
   "scripts": {
     "start": "node src/cli/index.js",
     "doctor": "node src/cli/index.js doctor",
@@ -23,12 +29,28 @@
     "test:init": "node --test tests/init.test.js",
     "test:fix-cli": "node --test tests/fix-cli.test.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dotoricode/bkit-doctor.git"
+  },
+  "homepage": "https://github.com/dotoricode/bkit-doctor#readme",
+  "bugs": {
+    "url": "https://github.com/dotoricode/bkit-doctor/issues"
+  },
   "engines": {
     "node": ">=18.0.0"
   },
   "dependencies": {
     "commander": "^12.0.0"
   },
-  "keywords": ["bkit", "claude-code", "cli", "doctor"],
+  "keywords": [
+    "bkit",
+    "claude-code",
+    "doctor",
+    "cli",
+    "diagnostics",
+    "scaffolding",
+    "project-health"
+  ],
   "license": "Apache-2.0"
 }
