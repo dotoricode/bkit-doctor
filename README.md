@@ -2,9 +2,9 @@
 
 > Diagnose, scaffold, and maintain your Claude Code project structure from the command line.
 
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org)
-[![Version](https://img.shields.io/badge/version-0.7.0-orange.svg)](CHANGELOG.md)
+![npm version](https://img.shields.io/npm/v/bkit-doctor)
+![license](https://img.shields.io/npm/l/bkit-doctor)
+[![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/dotoricode/bkit-doctor/pulls)
 
 **English** | [한국어](README.ko.md) | [日本語](README.ja.md) | [中文](README.zh.md) | [Español](README.es.md)
@@ -33,56 +33,117 @@ npx bkit-doctor fix --yes      # auto-fix everything
 
 ---
 
-## What problem does it solve?
+## Installation
 
-Setting up a Claude Code project properly means creating the right directories, config files, agent definitions, skill files, and documentation scaffolds. Doing this by hand is tedious and error-prone. Forgetting a single file can break hooks, disable skills, or leave AI assistants without context.
+```bash
+# Run without installing (recommended for trying it out)
+npx bkit-doctor check
 
-**bkit-doctor** automates this:
+# Install globally
+npm install -g bkit-doctor
 
-- **Diagnose** — instantly see what is present, what is missing, and what needs attention
-- **Recommend** — automatically suggest which targets to initialize based on current state
-- **Fix** — scaffold the correct structure in one command, without overwriting anything you already have
-- **Preview** — see exactly what will change before anything is written to disk (`--dry-run`)
-- **Verify** — run in CI to ensure project structure stays healthy over time
+# Or add to your project as a dev dependency
+npm install --save-dev bkit-doctor
+```
 
----
-
-## What is bkit?
-
-[bkit](https://github.com/anthropics/bkit) is a PDCA-based development workflow framework for Claude Code. It provides structured phases (Plan, Design, Do, Check, Report), agent teams, and quality gates for AI-native development.
-
-**bkit-doctor works with or without bkit:**
-
-| Capability | Without bkit | With bkit |
-|------------|:---:|:---:|
-| `check` — project structure diagnosis | Yes | Yes |
-| `init` — scaffold missing files | Yes | Yes |
-| `fix` — auto-remediation | Yes | Yes |
-| `preset` — workflow-optimized bundles | Partial | Full |
-| `save` / `load` — settings persistence | Yes | Yes |
-
-The core commands (`check`, `init`, `fix`) are useful for any Claude Code project. Presets and advanced scaffolding targets are optimized for the bkit PDCA workflow.
+Requires **Node.js >= 18**.
 
 ---
 
-## Features
+## Quick start
 
-| Feature | Description |
-|---------|-------------|
-| `check` | Diagnose project environment — pass / warn / fail per item |
-| `init` | Scaffold missing directories and files non-destructively |
-| `fix` | One-command auto-remediation (check + recommend + init) |
-| `preset` | Apply predefined bundles (`default`, `lean`, `docs`) |
-| `save` / `load` | Persist and share team settings |
-| Recommendations | After check, shows which `init` targets to run next |
-| Grouped targets | Related targets consolidated (e.g. `docs-core` = all doc dirs) |
-| Snapshot cache | `check` caches results; `init --recommended` reuses them |
-| `--dry-run` | Preview changes without touching the filesystem |
-| `--yes / -y` | Skip confirmation prompt (CI-friendly) |
-| `--overwrite` / `--backup` | Safe file replacement with backup |
-| Typo hints | `did you mean: docs-report?` when a target name is mistyped |
-| Exit codes | Exit 1 on critical failures (CI pipeline integration) |
-| Cross-platform | Works on macOS and Windows |
+```bash
+# 1. Diagnose your project
+bkit-doctor check
+
+# 2. Auto-fix everything that's missing
+bkit-doctor fix --yes
+
+# 3. Verify — should now be HEALTHY
+bkit-doctor check
+```
+
+---
+
+## Commands
+
+bkit-doctor provides 7 commands:
+
+### `check` — diagnose project structure
+
+Runs 14 diagnostic checks and reports pass/warn/fail for each item. Saves a recommendation snapshot for subsequent `init --recommended` or `fix`.
+
+```bash
+bkit-doctor check                    # check current directory
+bkit-doctor check --path ./other     # check a different directory
+```
+
+Exit code: **1** if any hard check fails, **0** otherwise.
+
+### `init` — scaffold missing files
+
+Creates missing directories and files. Non-destructive by default — existing files are never overwritten unless you explicitly pass `--overwrite`.
+
+```bash
+bkit-doctor init --recommended --yes      # apply recommendations from last check
+bkit-doctor init --preset default --yes   # apply a preset bundle
+bkit-doctor init --target hooks-json      # scaffold a single target
+bkit-doctor init --targets agents-core,docs-core  # multiple targets
+bkit-doctor init --recommended --dry-run  # preview without writing
+bkit-doctor init --overwrite --backup     # overwrite with backup
+```
+
+### `fix` — one-command auto-remediation
+
+Shortcut for `check` + `recommend` + `init`. Runs diagnosis, computes recommendations, and applies them.
+
+```bash
+bkit-doctor fix --yes           # fix everything, no prompts
+bkit-doctor fix --dry-run       # preview what would be fixed
+bkit-doctor fix --fresh --yes   # ignore snapshot, recompute
+```
+
+### `preset` — predefined scaffold bundles
+
+Presets select which targets to scaffold and affect the generated file content.
+
+```bash
+bkit-doctor preset list              # show available presets
+bkit-doctor preset show default      # show preset details
+bkit-doctor preset recommend         # recommend preset for current project
+```
+
+Available presets:
+
+| Preset | Description | Targets |
+|--------|-------------|---------|
+| `default` | Full structure (config + agents + skills + templates + policies + docs) | 8 targets |
+| `lean` | Minimal structure (config + agents only) | 4 targets |
+| `workflow-core` | Workflow structure (agents + skills + templates + policies) | 5 targets |
+| `docs` | Documentation only (plan, design, task, report, changelog) | 1 target |
+
+Content varies by preset: `default` generates detailed agent roles and skill descriptions; `lean` generates compact placeholders.
+
+### `save` / `load` — persist and share settings
+
+Save your preferred default mode (recommended or preset) locally or globally, and re-apply it later or share it across projects.
+
+```bash
+bkit-doctor save --local --recommended    # save preference locally
+bkit-doctor save --global --preset lean   # save globally (all projects)
+bkit-doctor save --both --preset default  # save to both
+
+bkit-doctor load --local                  # re-apply saved settings
+bkit-doctor load --global                 # apply global to current project
+bkit-doctor load --file ./settings.json   # apply from a specific file
+```
+
+### `version` — display version info
+
+```bash
+bkit-doctor version       # version + platform details
+bkit-doctor --version     # version number only
+```
 
 ---
 
@@ -106,150 +167,22 @@ The core commands (`check`, `init`, `fix`) are useful for any Claude Code projec
 
 ---
 
-## Relationship with bkit
+## CI usage
 
-> **bkit-doctor is an independent project.** It is not an official bkit plugin and has no affiliation with the bkit team.
-
-bkit-doctor was inspired by [bkit](https://github.com/anthropics/bkit) — a PDCA-based AI-native development workflow. The author learned structured AI collaboration through bkit's materials, and that knowledge shaped this tool's design.
-
-bkit-doctor does **not** include bkit code, does **not** require bkit to function, and is **not** endorsed or maintained by the bkit team. It is designed to be useful alongside bkit-style workflows.
-
----
-
-## Acknowledgements
-
-Special thanks to the **bkit project** for the workflow philosophy that inspired this tool. The clarity of Plan, Design, Do, Check — and the idea that AI collaboration works best with structured context — directly influenced how bkit-doctor was designed.
-
----
-
-## Installation
-
-### Requirements
-
-- Node.js >= 18.0.0
-- npm
-
-### Install globally
+`bkit-doctor check` returns exit code 1 when critical structure is missing, making it suitable for CI gates:
 
 ```bash
-npm install -g bkit-doctor
-```
+# GitHub Actions example
+- name: Check Claude Code project health
+  run: npx bkit-doctor check --path .
 
-### Run from source
-
-```bash
-git clone https://github.com/wpfhak/bkit-doctor.git
-cd bkit-doctor
-npm install
-npm link
+# Shell script
+bkit-doctor check || { echo "Project health check failed"; exit 1; }
 ```
 
 ---
 
-## Usage
-
-```bash
-bkit-doctor <command> [options]
-```
-
-### Quick start
-
-```bash
-# Diagnose your Claude Code project structure
-bkit-doctor check
-
-# Auto-fix everything that's missing
-bkit-doctor fix --yes
-
-# Or step by step: preview first, then apply
-bkit-doctor init --recommended --dry-run
-bkit-doctor init --recommended --yes
-
-# Initialize only specific pieces
-bkit-doctor init --target hooks-json --target skills-core
-
-# Use in CI (exits 1 if critical checks fail)
-bkit-doctor check --path ./my-project
-```
-
----
-
-## Commands
-
-### `check`
-
-Diagnose the bkit environment in the current (or specified) directory.
-After the diagnosis, `check` saves a recommendation snapshot so that
-`init --recommended` can reuse the results without re-running all checks.
-
-```
-bkit-doctor check [options]
-
-Options:
-  -p, --path <dir>   Target directory (default: current directory)
-```
-
-**Output example:**
-
-```
-[bkit-doctor] 진단 대상: /path/to/project
-
-──── 카테고리 ──────────────────────────
-  ✗ structure   1 fail
-  ! config      2 warn
-  ! docs        4 warn
-  ...
-
-──── 상세 ──────────────────────────────
-[FAIL] structure.claude-root — .claude/ missing
-  → run: bkit-doctor init --target claude-root
-...
-
-총 14개 — PASS 0 / WARN 12 / FAIL 2   상태: FAILED
-
-──── 추천 ──────────────────────────────
-  8개 추천 target (14개 문제 기반)
-
-  • claude-root — create the .claude/ root directory
-  • hooks-json  — create the default hooks.json file
-  • docs-core   — create all docs/ scaffolds (plan, design, task, report, changelog)
-    (covers: docs-plan, docs-design, docs-task, docs-report, docs-changelog)
-
-  Recommended next step:
-  bkit-doctor init --targets claude-root,hooks-json,...,docs-core
-
-  Preview first:
-  bkit-doctor init --targets claude-root,hooks-json,...,docs-core --dry-run
-```
-
-Each item is rated `pass`, `warn`, or `fail`. The recommendation section shows which `init` targets address the issues, with related targets grouped (e.g. all `docs-*` → `docs-core`).
-
----
-
-### `init`
-
-Scaffold missing files and directories. Non-destructive by default — existing files are never overwritten unless you explicitly request it.
-
-Before applying, `init` shows a plan summary and asks `Continue? (y/N)`.
-Use `--dry-run` to preview without writing, or `--yes` to skip confirmation.
-
-```
-bkit-doctor init [options]
-
-Options:
-  -p, --path <dir>       Target directory (default: current directory)
-  --dry-run              Show plan without writing anything
-  --recommended          Auto-select targets from current project state
-  --fresh                Force recompute recommendations (ignore snapshot)
-  -y, --yes              Skip confirmation prompt, apply immediately
-  --target <name>        Apply a specific target only (repeatable)
-  --targets <list>       Apply multiple targets, comma-separated
-  --overwrite            Allow overwriting existing files
-  --backup               Back up existing files before overwriting
-  --backup-dir <dir>     Custom backup directory
-```
-
-#### Available init targets
+## Available init targets
 
 | Target | What it creates |
 |--------|----------------|
@@ -257,94 +190,37 @@ Options:
 | `hooks-json` | `.claude/hooks.json` |
 | `settings-local` | `.claude/settings.local.json` |
 | `agents-core` | 4 agent definition files under `.claude/agents/` |
-| `skills-core` | 6 skill SKILL.md files under `.claude/skills/` |
+| `skills-core` | 7 skill SKILL.md files under `.claude/skills/` |
 | `templates-core` | 4 document templates under `.claude/templates/` |
 | `policies-core` | 4 policy files under `.claude/policies/` |
-| `docs-plan` | `docs/plan.md` |
-| `docs-design` | `docs/design.md` |
-| `docs-task` | `docs/task.md` |
-| `docs-report` | `docs/report.md` |
-| `docs-changelog` | `docs/changelog.md` |
+| `docs-plan` | `docs/01-plan/` directory |
+| `docs-design` | `docs/02-design/` directory |
+| `docs-task` | `docs/03-task/` directory |
+| `docs-report` | `docs/04-report/` directory |
+| `docs-changelog` | `CHANGELOG.md` |
 | `docs-core` | All docs (alias for all `docs-*` targets) |
 
 ---
 
-### `fix`
+## What is bkit?
 
-One-command auto-remediation. Runs `check`, computes recommendations, and applies them.
+[bkit](https://github.com/anthropics/bkit) is a PDCA-based development workflow framework for Claude Code. It provides structured phases (Plan, Design, Do, Check, Report), agent teams, and quality gates for AI-native development.
 
-```
-bkit-doctor fix [options]
+**bkit-doctor works with or without bkit:**
 
-Options:
-  -p, --path <dir>   Target directory (default: current directory)
-  --dry-run          Show plan without writing anything
-  --fresh            Force recompute (ignore snapshot)
-  -y, --yes          Skip confirmation prompt
-```
+| Capability | Without bkit | With bkit |
+|------------|:---:|:---:|
+| `check` — project structure diagnosis | Yes | Yes |
+| `init` — scaffold missing files | Yes | Yes |
+| `fix` — auto-remediation | Yes | Yes |
+| `preset` — workflow-optimized bundles | Partial | Full |
+| `save` / `load` — settings persistence | Yes | Yes |
 
-### `preset`
-
-Apply predefined scaffold bundles.
-
-```bash
-bkit-doctor preset list              # show available presets
-bkit-doctor preset show default      # show preset details
-bkit-doctor preset recommend         # recommend preset for current project
-bkit-doctor init --preset lean --yes # apply a preset
-```
-
-### `save` / `load`
-
-Persist and share default settings.
-
-```bash
-bkit-doctor save --local --recommended    # save preference locally
-bkit-doctor save --global --preset lean   # save globally
-bkit-doctor load --local                  # re-apply saved settings
-bkit-doctor load --global                 # apply global to current project
-```
-
-### `version`
-
-Display version and platform information.
-
-```bash
-bkit-doctor version
-```
+The core commands (`check`, `init`, `fix`) are useful for any Claude Code project. Presets and advanced scaffolding targets are optimized for the bkit PDCA workflow.
 
 ---
 
-## Examples
-
-```bash
-# Diagnose → auto-fix → verify
-bkit-doctor check                          # see what's missing
-bkit-doctor fix --yes                      # fix everything
-bkit-doctor check                          # verify: should be HEALTHY
-
-# Preview before applying
-bkit-doctor init --recommended --dry-run   # see what would change
-bkit-doctor init --recommended --yes       # apply it
-
-# Selective scaffolding
-bkit-doctor init --target hooks-json       # just one target
-bkit-doctor init --targets hooks-json,docs-core  # multiple targets
-
-# Safe overwrite with backup
-bkit-doctor init --overwrite --backup      # backs up to .bkit-doctor/backups/
-
-# CI pipeline integration
-bkit-doctor check --path ./my-project && echo "healthy" || echo "needs fix"
-
-# Team settings workflow
-bkit-doctor save --global --preset default # team lead saves standard
-bkit-doctor load --global                  # team member applies it
-```
-
----
-
-## Architecture Overview
+## Architecture
 
 ```
 bkit-doctor/
@@ -354,7 +230,7 @@ bkit-doctor/
 │   │   └── commands/             # check, init, fix, preset, save, load, version
 │   ├── core/
 │   │   └── checker.js            # CheckerRunner — registers and runs diagnostics
-│   ├── checkers/                 # 14 diagnostic modules (structure, config, docs, agents...)
+│   ├── checkers/                 # 14 diagnostic modules
 │   │   └── shared/fileRules.js   # findMissingFiles, hasAnyFile utilities
 │   ├── check/
 │   │   ├── resultModel.js        # CheckResult type
@@ -375,9 +251,13 @@ bkit-doctor/
 
 ---
 
-## Development methodology
+## Relationship with bkit
 
-This project was built using the same PDCA workflow it promotes. Every feature has Plan, Design, Task, and Report documents in `docs/`. This ensures changes are intentional, documented, and traceable.
+> **bkit-doctor is an independent project.** It is not an official bkit plugin and has no affiliation with the bkit team.
+
+bkit-doctor was inspired by [bkit](https://github.com/anthropics/bkit) — a PDCA-based AI-native development workflow. The author learned structured AI collaboration through bkit's materials, and that knowledge shaped this tool's design.
+
+bkit-doctor does **not** include bkit code, does **not** require bkit to function, and is **not** endorsed or maintained by the bkit team.
 
 ---
 
