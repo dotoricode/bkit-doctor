@@ -100,10 +100,12 @@ async function setupCommand(options) {
   if (claudeExists) {
     const answer = await ask('  CLAUDE.md already exists. Generate a new one? Existing file will be backed up. (y/N) ');
     if (isExplicitYes(answer)) {
-      // backup existing CLAUDE.md
-      const backupPath = path.join(projectRoot, 'CLAUDE.md._backup');
+      // backup existing CLAUDE.md with date stamp
+      const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      const backupName = `CLAUDE_${date}_backup.md`;
+      const backupPath = path.join(projectRoot, backupName);
       fs.copyFileSync(claudePath, backupPath);
-      console.log(`  backed up to CLAUDE.md._backup`);
+      console.log(`  backed up to ${backupName}`);
 
       const content = buildClaudeContent(projectName);
       fs.writeFileSync(claudePath, content, 'utf8');
