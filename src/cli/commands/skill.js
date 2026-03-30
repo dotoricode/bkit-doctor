@@ -63,10 +63,13 @@ async function skillCommand(options) {
 
   // append to CLAUDE.md
   if (appendClaude) {
+    if (!fs.existsSync(targetFile)) {
+      console.log(`[bkit-doctor] ${relPath} not found — run \`bkit-doctor skill\` first to create SKILL.md, or create CLAUDE.md manually`);
+      return;
+    }
+
     const separator = '\n\n---\n\n';
-    const existing = fs.existsSync(targetFile)
-      ? fs.readFileSync(targetFile, 'utf8')
-      : '';
+    const existing = fs.readFileSync(targetFile, 'utf8');
 
     if (existing.includes('RULE 1: PROACTIVE DOCUMENTATION')) {
       console.log(`[bkit-doctor] skill rules already present in ${relPath} — skipped`);
