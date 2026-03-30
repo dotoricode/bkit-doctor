@@ -138,6 +138,14 @@ npm install -g bkit-doctor
 npm install --save-dev bkit-doctor
 ```
 
+**Updating to the latest version:**
+
+```bash
+npm update -g bkit-doctor
+# or
+npm install -g bkit-doctor@latest
+```
+
 Requires **Node.js >= 18**.
 
 ### Run from source
@@ -153,7 +161,7 @@ npm link
 
 ## Commands
 
-bkit-doctor provides 8 commands:
+bkit-doctor provides 13 commands:
 
 ### `check` — diagnose project structure
 
@@ -257,7 +265,7 @@ bkit-doctor pdca "Release Checklist" -o docs/custom.md   # custom output path
 bkit-doctor pdca "Login Feature" --type feature --owner alice --priority P0
 ```
 
-**Default output path:** `docs/00-pdca/<slug>-pdca-guide.md`
+**Default output path:** `output/pdca/<slug>-pdca-guide.md`
 
 **Options:**
 
@@ -271,7 +279,41 @@ bkit-doctor pdca "Login Feature" --type feature --owner alice --priority P0
 | `--owner <name>` | Owner name | `TBD` |
 | `--priority <level>` | Priority (`P0` / `P1` / `P2` / `P3`) | `P1` |
 
-**Scope (v1):** Template-based generation only. No stateful PDCA workflow, no AI generation, no multi-step sub-commands (`pdca plan`, `pdca do`, etc.).
+**Scope:** Template-based generation. No AI generation. For a stage-by-stage workflow, use the sub-commands below.
+
+> For a complete walkthrough, see the [PDCA Tutorial](docs/tutorials/pdca-guide.md).
+
+### `pdca-plan` / `pdca-do` / `pdca-check` / `pdca-report` — stage documents
+
+Generate one document per PDCA stage and fill it in over time. Stage documents track state in `.bkit-doctor/pdca-state.json`.
+
+```bash
+bkit-doctor pdca-plan "User Auth" --type feature --owner alice --priority P1
+bkit-doctor pdca-do "User Auth"
+bkit-doctor pdca-check "User Auth"
+bkit-doctor pdca-report "User Auth"
+```
+
+Each command outputs a separate file under `output/pdca/`:
+
+```
+output/pdca/
+├── user-auth-pdca-plan.md
+├── user-auth-pdca-do.md
+├── user-auth-pdca-check.md
+└── user-auth-pdca-report.md
+```
+
+All stage commands accept the same options as `pdca` (`--type`, `--owner`, `--priority`, `--output`, `--stdout`, `--dry-run`, `--overwrite`).
+
+### `pdca-list` — list generated PDCA documents
+
+Show all PDCA topics tracked under the current project.
+
+```bash
+bkit-doctor pdca-list
+bkit-doctor pdca-list --path ./other-project
+```
 
 ### `version` — display version info
 
@@ -290,8 +332,8 @@ bkit-doctor --version     # version number only
 | config | `CLAUDE.md` exists | **hard** (exit 1 if missing) |
 | config | `.claude/hooks.json` exists | soft |
 | config | `.claude/settings.local.json` exists | soft |
-| docs | `docs/00-pdca/` PDCA guide directory | soft |
-| docs | `docs/00-pdca/` has at least 1 guide with Meta/Plan/Do/Check/Act | soft |
+| docs | `output/pdca/` PDCA guide output directory exists | soft |
+| docs | `output/pdca/` has at least 1 guide with Meta/Plan/Do/Check/Act sections | soft |
 | docs | `docs/01-plan/` through `docs/04-report/` (4 checks) | soft |
 | agents | 4 required agent definition files | soft |
 | skills | 7 required SKILL.md files | soft |
@@ -341,6 +383,7 @@ Exit code behavior:
 | `docs-task` | `docs/03-task/` directory |
 | `docs-report` | `docs/04-report/` directory |
 | `docs-changelog` | `CHANGELOG.md` |
+| `docs-pdca` | `output/pdca/` PDCA guide output directory |
 | `docs-core` | All docs (alias for all `docs-*` targets) |
 
 ---
@@ -413,7 +456,7 @@ bkit-doctor/
 ├── src/
 │   ├── cli/
 │   │   ├── index.js              # CLI entry point (commander)
-│   │   └── commands/             # check, init, fix, preset, save, load, version
+│   │   └── commands/             # check, init, fix, preset, save, load, pdca, pdca-*, version
 │   ├── core/
 │   │   └── checker.js            # CheckerRunner — registers and runs diagnostics
 │   ├── checkers/                 # 16 diagnostic modules
@@ -429,9 +472,9 @@ bkit-doctor/
 │   ├── backup/                   # backup session management
 │   └── shared/
 │       └── remediationMap.js     # checker id → initTarget mapping
-├── tests/                        # 167 tests (node:test)
+├── tests/                        # 226 tests (node:test)
 ├── scripts/
-│   └── verify-release.js         # 38-check release verification
+│   └── verify-release.js         # 45-check release verification
 └── docs/                         # PDCA phase documents (plan, design, task, report)
 ```
 
