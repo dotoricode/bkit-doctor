@@ -11,6 +11,39 @@ Versions follow a phase-based progression rather than strict SemVer.
 
 ---
 
+## [1.1.0] — pdca command — 2026-03-30
+
+### Added
+
+- **`pdca` command** — `bkit-doctor pdca <topic>` generates a PDCA guide markdown document
+  - Type-specific templates with tailored placeholders: `guideline` (policy/standard), `feature` (new development), `bugfix` (incident response), `refactor` (architecture improvement)
+  - Each type provides context-specific hints for Background, Problem Statement, Success Criteria, Risks, and Follow-up sections
+  - `--stdout` prints markdown content to terminal without file creation
+  - `--dry-run` shows generation plan including output path, file conflict status, and full preview
+  - `--overwrite` allows replacing existing files
+  - `-o, --output <file>` specifies custom output path
+  - `--type`, `--owner`, `--priority` set document metadata (defaults: `guideline`, `TBD`, `P1`)
+  - Korean-safe slug generation for file names (Unicode letter/number support)
+  - Default output: `output/pdca/<slug>-pdca-guide.md`
+- **Stage subcommands** — `pdca-plan`, `pdca-do`, `pdca-check`, `pdca-report` for stage-specific document generation
+  - Each stage has detailed section templates (e.g., Plan includes Dependencies/Timeline, Check includes Gap Analysis/Reviewer Sign-off)
+  - Type inheritance from first document or `--type` option
+  - Output: `output/pdca/<slug>-pdca-{stage}.md`
+- **`pdca-list` command** — displays all generated PDCA guides with type, stage, and update date
+- **PDCA state tracking** — `.bkit-doctor/pdca-state.json` tracks topic metadata, current stage, and file paths
+- **`docs.pdca` check** — `check` verifies `output/pdca/` directory exists
+- **`docs.pdca-content` check** — `check` verifies at least one PDCA guide exists with required sections (Meta, Plan, Do, Check, Act)
+- **`docs-pdca` init target** — `init` scaffolds `output/pdca/` directory with usage README
+- **verify-release** — 7 new pdca checks: 3 runtime (help, stdout, dry-run) + 4 static (CLI registration, README, test file, test script) — 45 checks total
+- **Test expansion** — 63 pdca tests (slugify 8, buildPdcaGuide 18, CLI 16, stage 7, state 8, state integration 3, list 3)
+
+### Changed
+
+- Diagnostic check count: 14 → 16 (added `docs.pdca` + `docs.pdca-content`)
+- README updated with `pdca` command documentation and usage examples
+
+---
+
 ## [1.0.0] — v1.0.0 release — 2026-03-30
 
 First stable release. All core CLI commands complete, tested, and documented.

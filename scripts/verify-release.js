@@ -902,6 +902,109 @@ function verifyFixCompatibility() {
 }
 
 /* --------------------------------------------------
+ * Phase 8-1 checks (pdca command)
+ * -------------------------------------------------- */
+
+function verifyPdcaHelp() {
+  const result = execCLI(['pdca', '--help']);
+  const exit = assertExitOk(result, 'pdca help');
+
+  if (!exit.ok) {
+    record('pdca help', false, exit.message);
+    return;
+  }
+
+  const hasOptions = result.stdout.includes('--stdout') && result.stdout.includes('--type');
+  record(
+    'pdca help',
+    hasOptions,
+    hasOptions ? 'pdca help shows options' : formatDetail(result)
+  );
+}
+
+function verifyPdcaStdout() {
+  const result = execCLI(['pdca', 'verify-test', '--stdout']);
+  const exit = assertExitOk(result, 'pdca stdout');
+
+  if (!exit.ok) {
+    record('pdca stdout', false, exit.message);
+    return;
+  }
+
+  const hasPlan = result.stdout.includes('## 1. Plan');
+  const hasAct  = result.stdout.includes('## 4. Act');
+  const hasMeta = result.stdout.includes('**Topic**: verify-test');
+  const ok = hasPlan && hasAct && hasMeta;
+
+  record(
+    'pdca stdout',
+    ok,
+    ok ? 'PDCA sections present' : formatDetail(result)
+  );
+}
+
+function verifyPdcaDryRun() {
+  const result = execCLI(['pdca', 'dry-run-test', '--dry-run']);
+  const exit = assertExitOk(result, 'pdca dry-run');
+
+  if (!exit.ok) {
+    record('pdca dry-run', false, exit.message);
+    return;
+  }
+
+  const ok = result.stdout.includes('dry-run') && result.stdout.includes('dry-run-test-pdca-guide.md');
+  record(
+    'pdca dry-run',
+    ok,
+    ok ? 'dry-run path shown' : formatDetail(result)
+  );
+}
+
+function verifyPdcaCliRegistered() {
+  const indexSrc = fs.readFileSync(path.join(PROJECT_ROOT, 'src', 'cli', 'index.js'), 'utf8');
+  const ok = indexSrc.includes("command('pdca") && indexSrc.includes('pdcaCommand');
+
+  record(
+    'pdca cli registered',
+    ok,
+    ok ? 'pdca command found in index.js' : 'pdca command not registered in src/cli/index.js'
+  );
+}
+
+function verifyPdcaReadme() {
+  const readme = fs.readFileSync(path.join(PROJECT_ROOT, 'README.md'), 'utf8');
+  const hasSection = readme.includes('### `pdca`');
+  const hasExample = readme.includes('bkit-doctor pdca');
+
+  const ok = hasSection && hasExample;
+  record(
+    'pdca readme',
+    ok,
+    ok ? 'pdca section + example in README' : `section=${hasSection} example=${hasExample}`
+  );
+}
+
+function verifyPdcaTestFile() {
+  const testExists = fs.existsSync(path.join(PROJECT_ROOT, 'tests', 'pdca.test.js'));
+  record(
+    'pdca test file',
+    testExists,
+    testExists ? 'tests/pdca.test.js exists' : 'tests/pdca.test.js missing'
+  );
+}
+
+function verifyPdcaTestScript() {
+  const pkg = require(path.join(PROJECT_ROOT, 'package.json'));
+  const ok = pkg.scripts && pkg.scripts['test:pdca'];
+
+  record(
+    'pdca test script',
+    Boolean(ok),
+    ok ? 'test:pdca script found' : 'test:pdca script missing in package.json'
+  );
+}
+
+/* --------------------------------------------------
  * runner
  * -------------------------------------------------- */
 
@@ -956,6 +1059,17 @@ const CHECKS = [
   verifySaveLoadRoundtrip,
   verifyInitCompatibility,
   verifyFixCompatibility,
+
+  // Phase 8-1: runtime
+  verifyPdcaHelp,
+  verifyPdcaStdout,
+  verifyPdcaDryRun,
+
+  // Phase 8-1: static
+  verifyPdcaCliRegistered,
+  verifyPdcaReadme,
+  verifyPdcaTestFile,
+  verifyPdcaTestScript,
 ];
 
 function main() {
