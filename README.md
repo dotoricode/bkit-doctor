@@ -2,8 +2,8 @@
 
 > Diagnose, scaffold, and maintain your AI-assisted project structure from the command line.
 
-![npm version](https://img.shields.io/npm/v/bkit-doctor)
-![license](https://img.shields.io/npm/l/bkit-doctor)
+[![npm version](https://img.shields.io/npm/v/bkit-doctor)](https://www.npmjs.com/package/bkit-doctor)
+[![license](https://img.shields.io/npm/l/bkit-doctor)](https://github.com/dotoricode/bkit-doctor/blob/main/LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/dotoricode/bkit-doctor/pulls)
 
@@ -37,6 +37,94 @@ bkit-doctor was built on the [bkit](https://github.com/popup-studio-ai/bkit-clau
 
 ---
 
+## Quick Start: Setting Up a New Project with bkit
+
+> bkit-doctor alone is useful, but pairing it with [bkit](https://github.com/popup-studio-ai/bkit-claude-code) unlocks the full PDCA workflow, 31 agents, and 36 skills inside Claude Code.
+
+### Step 1 — Scaffold your project structure with bkit-doctor
+
+Run the following inside your new project directory.
+
+```bash
+# 1. Diagnose (most items will warn/fail on a fresh project — that's expected)
+npx bkit-doctor check
+
+# 2. Auto-generate the missing structure
+npx bkit-doctor init --preset default --yes
+
+# 3. Re-diagnose and confirm HEALTHY status
+npx bkit-doctor check
+```
+
+After this step, your project will have the following **directory and file skeleton**:
+
+```
+your-project/
+├── .claude/
+│   ├── hooks.json
+│   ├── settings.local.json
+│   ├── agents/          ← agent definition files (placeholders)
+│   ├── skills/          ← skill files (placeholders)
+│   ├── templates/       ← document templates
+│   └── policies/        ← policy files
+├── docs/
+│   ├── 01-plan/
+│   ├── 02-design/
+│   ├── 03-task/
+│   └── 04-report/
+├── CLAUDE.md
+└── CHANGELOG.md
+```
+
+> **This is a skeleton.** The files inside `.claude/agents/` and `.claude/skills/` are placeholders. The actual bkit agent and skill logic is not included yet — that comes in the next step.
+
+### Step 2 — Install the bkit plugin into Claude Code
+
+bkit's actual capabilities — PDCA workflow, CTO agent teams, quality gates, and more — run as a **Claude Code plugin**. Open Claude Code and run:
+
+```
+/plugin marketplace add popup-studio-ai/bkit-claude-code
+/plugin install bkit
+```
+
+Once installed, Claude Code saves the plugin at `~/.claude/plugins/bkit/`. From this point on, bkit's 36 skills and 31 agents are automatically active in every project.
+
+### Step 3 — Start your first development session
+
+In Claude Code with the bkit plugin installed, kick off the PDCA workflow:
+
+```
+# Start planning a new feature (e.g. login)
+/pdca plan login-feature
+
+# Generate a design document
+/pdca design login-feature
+
+# Implement
+/pdca do login-feature
+
+# Verify and gap-analyze
+/pdca analyze login-feature
+```
+
+Documents are written into the `docs/` directory structure that bkit-doctor created.
+
+### How the two tools relate
+
+```
+bkit-doctor                       bkit (Claude Code plugin)
+──────────────────────────        ──────────────────────────────────
+Creates project skeleton          Powers the AI workflow engine
+.claude/ directory structure      36 skills / 31 agents
+docs/ document layout             PDCA state machine
+hooks.json configuration          Quality gates / audit logging
+CLAUDE.md context file            CTO-Led Agent Teams
+```
+
+bkit-doctor is a **one-time setup tool**. After that, bkit handles everything inside Claude Code.
+
+---
+
 ## Installation
 
 ```bash
@@ -63,21 +151,6 @@ npm link
 
 ---
 
-## Quick start
-
-```bash
-# 1. Diagnose your project
-bkit-doctor check
-
-# 2. Auto-fix everything that's missing
-bkit-doctor fix --yes
-
-# 3. Verify — should now be HEALTHY
-bkit-doctor check
-```
-
----
-
 ## Commands
 
 bkit-doctor provides 7 commands:
@@ -92,6 +165,27 @@ bkit-doctor check --path ./other     # check a different directory
 ```
 
 Exit code: **1** if any hard check fails, **0** otherwise.
+
+**Example output:**
+
+```
+[bkit-doctor] target: /path/to/project
+
+──── categories ────────────────────────
+  ✗ structure   1 fail
+  ! config      2 warn
+  ✓ docs        4 pass
+
+──── details ───────────────────────────
+[FAIL] structure.claude-root — .claude/ missing
+[WARN] config.hooks-json — .claude/hooks.json missing
+[PASS] docs.plan — docs/01-plan exists
+
+14 total — PASS 8 / WARN 4 / FAIL 2   status: FAILED
+
+──── recommendations ───────────────────
+  bkit-doctor init --targets claude-root,hooks-json,...
+```
 
 ### `init` — scaffold missing files
 
@@ -221,6 +315,44 @@ Exit code behavior:
 
 ---
 
+## FAQ
+
+**Q: I ran `init --preset default` but bkit features aren't working.**
+
+A: bkit-doctor creates the **file structure** for your project. bkit's actual features — PDCA workflow, agents, skills — run as a **Claude Code plugin** and must be installed separately. Open Claude Code and run:
+
+```
+/plugin marketplace add popup-studio-ai/bkit-claude-code
+/plugin install bkit
+```
+
+**Q: Files appeared in `.claude/agents/` — are these the bkit agents?**
+
+A: No. The agent files bkit-doctor generates are **placeholders**. bkit's actual 31 agents live inside the Claude Code plugin (`~/.claude/plugins/bkit/agents/`). The placeholder files bkit-doctor creates are useful as a reference when writing your own custom agents.
+
+**Q: Do I need to install bkit?**
+
+A: No. bkit-doctor is a standalone CLI tool and works without bkit. If you want to use bkit's `/pdca` workflow commands and agent teams, install the bkit plugin into Claude Code.
+
+**Q: Will it overwrite my existing files?**
+
+A: Not by default. You must explicitly pass `--overwrite`. Combine it with `--backup` to back up existing files before overwriting.
+
+**Q: How can I preview what will be created?**
+
+A: Use `--dry-run`. Nothing is written to disk.
+
+```bash
+bkit-doctor init --recommended --dry-run
+bkit-doctor fix --dry-run
+```
+
+**Q: Can I use this in CI?**
+
+A: Yes. `check` returns exit code 1 when core structure is missing, so it works as a CI gate.
+
+---
+
 ## What is bkit?
 
 [bkit](https://github.com/popup-studio-ai/bkit-claude-code) is a PDCA-based development workflow framework for Claude Code. It provides structured phases (Plan, Design, Do, Check, Report), agent teams, and quality gates for AI-native development.
@@ -234,6 +366,9 @@ Exit code behavior:
 | `fix` — auto-remediation | Yes | Yes |
 | `preset` — workflow-optimized bundles | Partial | Full |
 | `save` / `load` — settings persistence | Yes | Yes |
+| `/pdca` workflow commands | No | Yes |
+| 31 agents / 36 skills | No | Yes |
+| PDCA quality gates / audit logging | No | Yes |
 
 The core commands (`check`, `init`, `fix`) are useful for any AI-assisted project. Presets and advanced scaffolding targets are optimized for the bkit PDCA workflow.
 
