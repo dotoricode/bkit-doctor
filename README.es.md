@@ -245,31 +245,31 @@ bkit-doctor load --file ./settings.json   # aplicar desde un archivo específico
 
 ### `pdca` — generar documento guía PDCA
 
-Genera un documento guía PDCA (Plan-Do-Check-Act) estructurado para cualquier tema. La salida es un archivo Markdown con marcadores de posición listos para editar.
+Genera un documento guía PDCA (Plan-Do-Check-Act) para un tema específico.
 
 ```bash
-bkit-doctor pdca "Criterios de Aprobación de Despliegue"          # generar guía
-bkit-doctor pdca "Respuesta a Fallos de Pago" --stdout            # imprimir en terminal
-bkit-doctor pdca "Checklist de Operaciones" --overwrite           # sobrescribir existente
-bkit-doctor pdca "Checklist de Release" -o docs/custom.md         # ruta de salida personalizada
-bkit-doctor pdca "Funcionalidad Login" --type feature --owner alice --priority P0
+bkit-doctor pdca "criterios de aprobación de despliegue"     # generar guía
+bkit-doctor pdca "respuesta a fallos de pago" --stdout        # imprimir en terminal
+bkit-doctor pdca "procedimiento de revisión" --overwrite      # sobrescribir archivo
+bkit-doctor pdca "función de login" --type feature --owner alice
+bkit-doctor pdca-plan "aprobación de despliegue" --type guideline  # solo Plan
+bkit-doctor pdca-list                                         # listar documentos
 ```
 
-**Ruta de salida predeterminada:** `docs/00-pdca/<slug>-pdca-guide.md`
-
-**Opciones:**
+**Ruta de salida predeterminada:** `output/pdca/<slug>-pdca-guide.md`
 
 | Opción | Descripción | Predeterminado |
 |--------|-------------|----------------|
-| `-p, --path <dir>` | Directorio raíz del proyecto | `cwd` |
-| `-o, --output <file>` | Ruta de archivo de salida personalizada | — |
-| `--stdout` | Imprimir en stdout en lugar de escribir archivo | — |
+| `--stdout` | Imprimir en terminal en vez de archivo | — |
+| `--dry-run` | Vista previa del plan, ruta y conflictos | — |
 | `--overwrite` | Sobrescribir archivo existente | — |
 | `--type <kind>` | `guideline` / `feature` / `bugfix` / `refactor` | `guideline` |
 | `--owner <name>` | Nombre del responsable | `TBD` |
-| `--priority <level>` | Prioridad (`P0` / `P1` / `P2` / `P3`) | `P1` |
+| `--priority <level>` | Prioridad (`P0`~`P3`) | `P1` |
 
-**Alcance (v1):** Generación basada en plantillas únicamente. Sin flujo de trabajo PDCA con estado, sin generación por IA, sin subcomandos multi-paso.
+**Comandos por etapa:** `pdca-plan`, `pdca-do`, `pdca-check`, `pdca-report`
+
+**Alcance (v1):** Solo generación basada en plantillas. Sin flujo de trabajo con estado, generación IA, ni subcomandos multi-paso.
 
 ### `version` — mostrar información de versión
 

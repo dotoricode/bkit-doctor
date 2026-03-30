@@ -243,33 +243,33 @@ bkit-doctor load --global                 # グローバル設定を現在のプ
 bkit-doctor load --file ./settings.json   # 指定ファイルから適用
 ```
 
-### `pdca` — PDCA ガイドドキュメントの生成
+### `pdca` — PDCAガイド文書の生成
 
-任意のトピックに対して構造化された PDCA（Plan-Do-Check-Act）ガイドドキュメントを生成します。出力は編集可能なプレースホルダー付きの Markdown ファイルです。
+特定のトピックに対するPDCA（Plan-Do-Check-Act）ガイド文書を生成します。
 
 ```bash
-bkit-doctor pdca "デプロイ承認基準"                           # ガイドを生成
-bkit-doctor pdca "決済エラー対応" --stdout                    # ターミナルに出力
-bkit-doctor pdca "オペレーションチェックリスト" --overwrite    # 既存ファイルを上書き
-bkit-doctor pdca "リリースチェックリスト" -o docs/custom.md   # カスタム出力パス
-bkit-doctor pdca "ログイン機能" --type feature --owner alice --priority P0
+bkit-doctor pdca "デプロイ承認基準"                         # ガイド生成
+bkit-doctor pdca "決済障害対応指針" --stdout                # ターミナルに出力
+bkit-doctor pdca "運用チェック手順" --overwrite             # 既存ファイルの上書き
+bkit-doctor pdca "ログイン機能" --type feature --owner alice
+bkit-doctor pdca-plan "デプロイ承認" --type guideline       # Plan段階のみ
+bkit-doctor pdca-list                                      # 生成済み文書一覧
 ```
 
-**デフォルト出力パス:** `docs/00-pdca/<slug>-pdca-guide.md`
-
-**オプション:**
+**デフォルト出力パス:** `output/pdca/<slug>-pdca-guide.md`
 
 | オプション | 説明 | デフォルト |
 |-----------|------|-----------|
-| `-p, --path <dir>` | プロジェクトルートディレクトリ | `cwd` |
-| `-o, --output <file>` | カスタム出力ファイルパス | — |
-| `--stdout` | ファイルに書かず標準出力に出力 | — |
-| `--overwrite` | 既存ファイルを上書き | — |
+| `--stdout` | ファイルの代わりにターミナルに出力 | — |
+| `--dry-run` | 生成計画・パス・競合のプレビュー | — |
+| `--overwrite` | 既存ファイルの上書き | — |
 | `--type <kind>` | `guideline` / `feature` / `bugfix` / `refactor` | `guideline` |
-| `--owner <name>` | オーナー名 | `TBD` |
-| `--priority <level>` | 優先度（`P0` / `P1` / `P2` / `P3`） | `P1` |
+| `--owner <name>` | 担当者名 | `TBD` |
+| `--priority <level>` | 優先度（`P0`〜`P3`） | `P1` |
 
-**スコープ（v1）:** テンプレートベースの生成のみ。ステートフルな PDCA ワークフロー、AI 生成、マルチステップサブコマンドは含みません。
+**ステージ別コマンド:** `pdca-plan`, `pdca-do`, `pdca-check`, `pdca-report`
+
+**スコープ（v1）:** テンプレートベースの生成のみ。ステートフルワークフロー、AI生成、マルチステップサブコマンドなし。
 
 ### `version` — バージョン情報の表示
 

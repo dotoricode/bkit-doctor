@@ -243,33 +243,33 @@ bkit-doctor load --global                 # 将全局设置应用到当前项目
 bkit-doctor load --file ./settings.json   # 从指定文件加载
 ```
 
-### `pdca` — 生成 PDCA 指南文档
+### `pdca` — 生成PDCA指南文档
 
-为任意主题生成结构化的 PDCA（Plan-Do-Check-Act）指南文档。输出为带有可编辑占位符的 Markdown 文件。
+为特定主题生成PDCA（Plan-Do-Check-Act）指南文档。
 
 ```bash
-bkit-doctor pdca "部署审批标准"                              # 生成指南
-bkit-doctor pdca "支付失败响应" --stdout                     # 输出到终端
-bkit-doctor pdca "运维检查清单" --overwrite                  # 覆盖已有文件
-bkit-doctor pdca "发布检查清单" -o docs/custom.md            # 自定义输出路径
-bkit-doctor pdca "登录功能" --type feature --owner alice --priority P0
+bkit-doctor pdca "部署审批标准"                             # 生成指南
+bkit-doctor pdca "支付故障应对指南" --stdout                # 输出到终端
+bkit-doctor pdca "运维检查流程" --overwrite                 # 覆盖已有文件
+bkit-doctor pdca "登录功能" --type feature --owner alice
+bkit-doctor pdca-plan "部署审批" --type guideline           # 仅Plan阶段文档
+bkit-doctor pdca-list                                      # 列出已生成文档
 ```
 
-**默认输出路径：** `docs/00-pdca/<slug>-pdca-guide.md`
-
-**选项：**
+**默认输出路径:** `output/pdca/<slug>-pdca-guide.md`
 
 | 选项 | 说明 | 默认值 |
 |------|------|--------|
-| `-p, --path <dir>` | 项目根目录 | `cwd` |
-| `-o, --output <file>` | 自定义输出文件路径 | — |
-| `--stdout` | 输出到终端而不写入文件 | — |
+| `--stdout` | 输出到终端而非文件 | — |
+| `--dry-run` | 预览生成计划、路径和冲突 | — |
 | `--overwrite` | 覆盖已有文件 | — |
 | `--type <kind>` | `guideline` / `feature` / `bugfix` / `refactor` | `guideline` |
-| `--owner <name>` | 负责人名称 | `TBD` |
-| `--priority <level>` | 优先级（`P0` / `P1` / `P2` / `P3`） | `P1` |
+| `--owner <name>` | 负责人 | `TBD` |
+| `--priority <level>` | 优先级（`P0`~`P3`） | `P1` |
 
-**范围（v1）：** 仅模板化生成。不包含有状态的 PDCA 工作流、AI 生成或多步骤子命令。
+**阶段命令:** `pdca-plan`, `pdca-do`, `pdca-check`, `pdca-report`
+
+**范围（v1）:** 仅基于模板生成。无状态管理工作流、AI生成或多步子命令。
 
 ### `version` — 显示版本信息
 

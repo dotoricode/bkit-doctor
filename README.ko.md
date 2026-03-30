@@ -243,6 +243,34 @@ bkit-doctor load --global                 # 전역 설정을 현재 프로젝트
 bkit-doctor load --file ./settings.json   # 특정 파일에서 설정 로드
 ```
 
+### `pdca` — PDCA 가이드 문서 생성
+
+특정 주제에 대한 PDCA (Plan-Do-Check-Act) 가이드 문서를 생성합니다. 바로 편집 가능한 마크다운 템플릿입니다.
+
+```bash
+bkit-doctor pdca "배포 승인 기준"                           # 가이드 생성
+bkit-doctor pdca "결제 장애 대응 지침" --stdout              # 터미널에 출력
+bkit-doctor pdca "운영 점검 절차" --overwrite                # 기존 파일 덮어쓰기
+bkit-doctor pdca "로그인 기능" --type feature --owner alice  # 메타데이터 지정
+bkit-doctor pdca-plan "배포 승인" --type guideline           # Plan 단계 문서만
+bkit-doctor pdca-list                                       # 생성된 문서 목록
+```
+
+**기본 출력 경로:** `output/pdca/<slug>-pdca-guide.md`
+
+| 옵션 | 설명 | 기본값 |
+|------|------|--------|
+| `--stdout` | 파일 대신 터미널에 출력 | — |
+| `--dry-run` | 생성 계획/경로/충돌 미리보기 | — |
+| `--overwrite` | 기존 파일 덮어쓰기 | — |
+| `--type <kind>` | `guideline` / `feature` / `bugfix` / `refactor` | `guideline` |
+| `--owner <name>` | 담당자 | `TBD` |
+| `--priority <level>` | 우선순위 (`P0`~`P3`) | `P1` |
+
+**단계별 명령:** `pdca-plan`, `pdca-do`, `pdca-check`, `pdca-report`
+
+**범위 (v1):** 템플릿 기반 생성만. 상태 관리형 워크플로우, AI 생성, 다단계 서브커맨드 없음.
+
 ### `version` — 버전 정보 표시
 
 ```bash

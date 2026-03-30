@@ -17,7 +17,7 @@ When you build projects with AI coding tools — Claude Code, Cursor, Copilot, a
 
 **bkit-doctor** diagnoses these structural issues and fixes them automatically. It checks whether your project has the right directories, config files, agent definitions, skill files, templates, policies, and documentation scaffolds — then scaffolds everything that's missing in one command.
 
-Think of it as **ESLint for your project layout**: 14 diagnostic checks, pass/warn/fail for each item, and one-command auto-fix.
+Think of it as **ESLint for your project layout**: 16 diagnostic checks, pass/warn/fail for each item, and one-command auto-fix.
 
 ```bash
 npx bkit-doctor check          # diagnose your project
@@ -153,11 +153,11 @@ npm link
 
 ## Commands
 
-bkit-doctor provides 7 commands:
+bkit-doctor provides 8 commands:
 
 ### `check` — diagnose project structure
 
-Runs 14 diagnostic checks and reports pass/warn/fail for each item. Saves a recommendation snapshot for subsequent `init --recommended` or `fix`.
+Runs 16 diagnostic checks and reports pass/warn/fail for each item. Saves a recommendation snapshot for subsequent `init --recommended` or `fix`.
 
 ```bash
 bkit-doctor check                    # check current directory
@@ -245,6 +245,34 @@ bkit-doctor load --global                 # apply global to current project
 bkit-doctor load --file ./settings.json   # apply from a specific file
 ```
 
+### `pdca` — generate PDCA guide document
+
+Generate a structured PDCA (Plan-Do-Check-Act) guide document for any topic. The output is a Markdown file with actionable placeholders ready for editing.
+
+```bash
+bkit-doctor pdca "Deploy Approval Criteria"              # generate guide
+bkit-doctor pdca "Payment Failure Response" --stdout     # print to terminal
+bkit-doctor pdca "Ops Checklist" --overwrite             # overwrite existing
+bkit-doctor pdca "Release Checklist" -o docs/custom.md   # custom output path
+bkit-doctor pdca "Login Feature" --type feature --owner alice --priority P0
+```
+
+**Default output path:** `docs/00-pdca/<slug>-pdca-guide.md`
+
+**Options:**
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `-p, --path <dir>` | Project root directory | `cwd` |
+| `-o, --output <file>` | Custom output file path | — |
+| `--stdout` | Print to stdout instead of writing a file | — |
+| `--overwrite` | Overwrite existing file | — |
+| `--type <kind>` | `guideline` / `feature` / `bugfix` / `refactor` | `guideline` |
+| `--owner <name>` | Owner name | `TBD` |
+| `--priority <level>` | Priority (`P0` / `P1` / `P2` / `P3`) | `P1` |
+
+**Scope (v1):** Template-based generation only. No stateful PDCA workflow, no AI generation, no multi-step sub-commands (`pdca plan`, `pdca do`, etc.).
+
 ### `version` — display version info
 
 ```bash
@@ -254,7 +282,7 @@ bkit-doctor --version     # version number only
 
 ---
 
-## What gets checked (14 items)
+## What gets checked (16 items)
 
 | Category | Check | Severity |
 |----------|-------|----------|
@@ -262,6 +290,8 @@ bkit-doctor --version     # version number only
 | config | `CLAUDE.md` exists | **hard** (exit 1 if missing) |
 | config | `.claude/hooks.json` exists | soft |
 | config | `.claude/settings.local.json` exists | soft |
+| docs | `docs/00-pdca/` PDCA guide directory | soft |
+| docs | `docs/00-pdca/` has at least 1 guide with Meta/Plan/Do/Check/Act | soft |
 | docs | `docs/01-plan/` through `docs/04-report/` (4 checks) | soft |
 | agents | 4 required agent definition files | soft |
 | skills | 7 required SKILL.md files | soft |
@@ -386,7 +416,7 @@ bkit-doctor/
 │   │   └── commands/             # check, init, fix, preset, save, load, version
 │   ├── core/
 │   │   └── checker.js            # CheckerRunner — registers and runs diagnostics
-│   ├── checkers/                 # 14 diagnostic modules
+│   ├── checkers/                 # 16 diagnostic modules
 │   │   └── shared/fileRules.js   # findMissingFiles, hasAnyFile utilities
 │   ├── check/
 │   │   ├── resultModel.js        # CheckResult type

@@ -63,8 +63,16 @@ $RECYCLE.BIN/
 *.lnk
 
 # ========================
+# Docs archive
+# ========================
+docs/archive/
+
+# ========================
 # Claude / bkit
 # ========================
+
+# pdca 명령 출력물 (런타임 생성)
+output/
 
 # bkit runtime state (audit 로그, session history, memory)
 .bkit/
