@@ -12,6 +12,8 @@ const { loadCommand }    = require('./commands/load');
 const { pdcaCommand }    = require('./commands/pdca');
 const { pdcaStageCommandFactory } = require('./commands/pdcaStage');
 const { pdcaListCommand }  = require('./commands/pdcaList');
+const { skillCommand }   = require('./commands/skill');
+const { setupCommand }   = require('./commands/setup');
 const pkg = require('../../package.json');
 
 const program = new Command();
@@ -101,6 +103,26 @@ program
   .option('--global',          'global 설정에서 로드하여 현재 프로젝트에 적용')
   .option('--file <path>',     '지정 파일에서 로드하여 현재 프로젝트에 적용')
   .action(loadCommand);
+
+// ── skill command ─────────────────────────────────────────────────────────────
+
+program
+  .command('skill')
+  .description('Generate SKILL.md with Claude Code automation rules')
+  .option('-p, --path <dir>',    'project root', process.cwd())
+  .option('--append-claude',     'append rules to CLAUDE.md instead of SKILL.md')
+  .option('--overwrite',         'overwrite existing SKILL.md')
+  .option('--stdout',            'print to terminal')
+  .option('--dry-run',           'preview without writing')
+  .action(skillCommand);
+
+// ── setup command ─────────────────────────────────────────────────────────────
+
+program
+  .command('setup')
+  .description('Interactive project setup wizard (check → fix → skill → scripts)')
+  .option('-p, --path <dir>',    'project root', process.cwd())
+  .action(setupCommand);
 
 // ── pdca command group ────────────────────────────────────────────────────────
 // backward compat: `pdca <topic>` → full guide (same as `pdca create <topic>`)

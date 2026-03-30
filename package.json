@@ -28,7 +28,8 @@
     "test:check": "node --test tests/check.test.js",
     "test:init": "node --test tests/init.test.js",
     "test:fix-cli": "node --test tests/fix-cli.test.js",
-    "test:pdca": "node --test tests/pdca.test.js"
+    "test:pdca": "node --test tests/pdca.test.js",
+    "test:skill": "node --test tests/skill.test.js"
   },
   "repository": {
     "type": "git",
