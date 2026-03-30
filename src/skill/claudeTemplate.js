@@ -8,9 +8,8 @@
  * to work effectively: project identity, conventions, workflow rules.
  */
 
-function buildClaudeContent(projectName, options = {}) {
+function buildClaudeContent(projectName) {
   const name = projectName || 'my-project';
-  const lang = options.language || 'en';
 
   return `# ${name} — Project Rules
 
