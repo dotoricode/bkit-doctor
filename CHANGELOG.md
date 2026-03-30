@@ -11,6 +11,35 @@ Versions follow a phase-based progression rather than strict SemVer.
 
 ---
 
+## [1.1.0] — skill & setup commands — 2026-03-30
+
+### Added
+
+- **`skill` command** — `bkit-doctor skill` generates `SKILL.md` with Claude Code automation rules
+  - RULE 1 (PROACTIVE DOCUMENTATION): auto-runs `pdca-plan` before coding
+  - RULE 2 (STATE SYNC): checks `pdca-list` state before implementation
+  - RULE 3 (PIPELINE): auto-runs `pdca-do`, `pdca-check`, `pdca-report` after coding
+  - `--append-claude` appends skill rules to existing `CLAUDE.md`; exits with error if `CLAUDE.md` not found
+- **`setup` command** — interactive project setup wizard
+  - Generates `CLAUDE.md` from template when missing
+  - Backs up existing `CLAUDE.md` as `CLAUDE_{date}_backup.md` before overwrite (TTY-only, requires explicit `y`)
+  - Adds `bkit:check`, `bkit:fix`, `bkit:setup` npm shortcut scripts to `package.json`
+  - Non-TTY environments skip interactive prompts safely (default N)
+- **`clear` command** — interactively delete project config files
+- **npm shortcut scripts** — `bkit:check`, `bkit:fix`, `bkit:setup` added to `package.json`
+
+### Fixed
+
+- `setup`: script tracking uses `addedKeys` array instead of counter — output now shows exactly which keys were added
+- `setup`: removed unused `formatLabel` import
+- `skill --append-claude`: exits with error message when `CLAUDE.md` does not exist (previously fell back to empty string, creating a broken file)
+
+### Refactored
+
+- `claudeTemplate.js`: removed unused `options` parameter and `lang` variable
+
+---
+
 ## [1.1.0] — pdca command — 2026-03-30
 
 ### Added
