@@ -315,6 +315,71 @@ bkit-doctor pdca-list
 bkit-doctor pdca-list --path ./other-project
 ```
 
+### `skill` — generate SKILL.md automation rules
+
+Generate a `SKILL.md` file that teaches Claude Code how to use bkit-doctor automatically — including proactive PDCA planning, state sync before coding, and auto-pipeline after implementation.
+
+```bash
+bkit-doctor skill                          # generate SKILL.md in current directory
+bkit-doctor skill --path ./my-project      # generate in a specific project
+bkit-doctor skill --append-claude          # also append rules to existing CLAUDE.md
+```
+
+The generated `SKILL.md` contains three automation rules:
+
+| Rule | Behavior |
+|------|----------|
+| RULE 1: PROACTIVE DOCUMENTATION | Auto-runs `pdca-plan` before writing code |
+| RULE 2: STATE SYNC | Checks `pdca-list` state before implementation |
+| RULE 3: PIPELINE | Auto-runs `pdca-do`, `pdca-check`, `pdca-report` after coding |
+
+> `--append-claude` requires `CLAUDE.md` to already exist. Run `bkit-doctor setup` first if you don't have one.
+
+---
+
+### `setup` — interactive project setup wizard
+
+One-command setup that runs diagnosis, generates `CLAUDE.md`, creates `SKILL.md`, and adds npm shortcut scripts.
+
+```bash
+bkit-doctor setup                     # interactive wizard (current directory)
+bkit-doctor setup --path ./my-project # specify project root
+```
+
+**What it does:**
+
+1. Runs `check` + `fix` to diagnose and repair project structure
+2. Generates `CLAUDE.md` from template (or prompts to regenerate if one exists)
+   - Existing file is backed up as `CLAUDE_{date}_backup.md` before overwrite
+   - In non-TTY environments (CI), existing files are kept unchanged
+3. Generates `SKILL.md`
+4. Adds npm shortcut scripts to `package.json`:
+
+```json
+{
+  "scripts": {
+    "bkit:check": "bkit-doctor check",
+    "bkit:fix":   "bkit-doctor fix --yes",
+    "bkit:setup": "bkit-doctor setup"
+  }
+}
+```
+
+After setup, run `npm run bkit:check` instead of `npx bkit-doctor check`.
+
+---
+
+### `clear` — delete config files interactively
+
+Remove bkit-doctor generated config files with a confirmation prompt.
+
+```bash
+bkit-doctor clear
+bkit-doctor clear --path ./my-project
+```
+
+---
+
 ### `version` — display version info
 
 ```bash

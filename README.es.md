@@ -271,6 +271,46 @@ bkit-doctor pdca-list                                         # listar documento
 
 **Alcance (v1):** Solo generación basada en plantillas. Sin flujo de trabajo con estado, generación IA, ni subcomandos multi-paso.
 
+### `skill` — generar reglas de automatización SKILL.md
+
+Genera el archivo `SKILL.md` que enseña a Claude Code cómo usar bkit-doctor automáticamente.
+
+```bash
+bkit-doctor skill                     # genera SKILL.md en el directorio actual
+bkit-doctor skill --append-claude     # también agrega reglas al CLAUDE.md existente
+```
+
+| Regla | Comportamiento |
+|-------|---------------|
+| RULE 1: PROACTIVE DOCUMENTATION | Ejecuta `pdca-plan` automáticamente antes de codificar |
+| RULE 2: STATE SYNC | Verifica el estado con `pdca-list` antes de implementar |
+| RULE 3: PIPELINE | Ejecuta `pdca-do`, `pdca-check`, `pdca-report` automáticamente después de codificar |
+
+---
+
+### `setup` — asistente interactivo de configuración del proyecto
+
+Diagnóstico, generación de `CLAUDE.md`, `SKILL.md` y scripts npm en un solo comando.
+
+```bash
+bkit-doctor setup
+```
+
+1. Ejecuta `check` + `fix`
+2. Genera `CLAUDE.md` (si existe, crea copia de seguridad `CLAUDE_{fecha}_backup.md` antes de regenerar)
+3. Genera `SKILL.md`
+4. Agrega scripts `bkit:check`, `bkit:fix`, `bkit:setup` al `package.json`
+
+---
+
+### `clear` — eliminar archivos de configuración
+
+```bash
+bkit-doctor clear
+```
+
+---
+
 ### `version` — mostrar información de versión
 
 ```bash
